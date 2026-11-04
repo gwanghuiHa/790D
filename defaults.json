@@ -303,10 +303,79 @@
       ],
       "screen": 4,
       "extension": 0.5
+    },
+    {
+      "id": "preset-340202ab-29ba-4b70-9a4d-747c39d7e643",
+      "name": "Energy_spread_4",
+      "beam": {
+        "energy": 44,
+        "n": 50000,
+        "seed": 7902026,
+        "emitX": 1,
+        "emitY": 1,
+        "betaX": 10,
+        "betaY": 10,
+        "alphaX": 0,
+        "alphaY": 0,
+        "sigmaZ": 1,
+        "sigmaDelta": 0.001,
+        "poly": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "profiles": {
+          "x": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "xp": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "y": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "yp": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "z": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "delta": {
+            "shape": "uniform",
+            "count": 5,
+            "separation": 0.7071
+          }
+        }
+      },
+      "line": [
+        {
+          "id": 1,
+          "name": "B3",
+          "type": "dipole",
+          "s": 2.55,
+          "L": 0.3,
+          "angle": -20,
+          "edgeIn": -10,
+          "edgeOut": 0
+        }
+      ],
+      "screen": 4,
+      "extension": 0.5
     }
   ],
   "defaultPresetId": "preset-1",
-  "activePresetId": "preset-ecea14be-8724-43e4-99cd-b183fa9b9e71",
-  "revision": "bf9c149e-0d6c-4596-85de-22e04e39c24d",
-  "publishedAt": "2026-11-04T01:24:27.652Z"
+  "activePresetId": "preset-340202ab-29ba-4b70-9a4d-747c39d7e643",
+  "revision": "1f5cf3eb-a601-4d27-a535-a81aeb7cf66b",
+  "publishedAt": "2026-11-04T04:00:17.834Z"
 }
