@@ -22,10 +22,34 @@ function map(p,m,b){const out=new Float64Array(p.length);for(let n=0;n<p.length;
 function stats(p){const n=p.length/6;if(!n)return {n:0,mean:Array(6).fill(0),cov:eye().map(r=>r.map(()=>0)),sx:null,sy:null};const mean=Array(6).fill(0);for(let k=0;k<p.length;k++)mean[k%6]+=p[k]/n;let cov=Array.from({length:6},()=>Array(6).fill(0));for(let k=0;k<p.length;k+=6)for(let i=0;i<6;i++)for(let j=0;j<=i;j++)cov[i][j]+=(p[k+i]-mean[i])*(p[k+j]-mean[j])/n;for(let i=0;i<6;i++)for(let j=0;j<i;j++)cov[j][i]=cov[i][j];return {n,mean,cov,sx:Math.sqrt(Math.max(0,cov[0][0])),sy:Math.sqrt(Math.max(0,cov[2][2]))};}
 function fastStats(p){const n=p.length/6;if(!n)return {n:0,sx:null,sy:null,mx:0,my:0};let mx=0,my=0;for(let k=0;k<p.length;k+=6){mx+=p[k]/n;my+=p[k+2]/n;}let vx=0,vy=0;for(let k=0;k<p.length;k+=6){vx+=(p[k]-mx)**2/n;vy+=(p[k+2]-my)**2/n;}return {n,sx:Math.sqrt(vx),sy:Math.sqrt(vy),mx,my};}
 function slit(p,axis,width,center){const i=axis==='y'?2:0,out=[];for(let k=0;k<p.length;k+=6)if(Math.abs(p[k+i]-center)<=width/2)for(let j=0;j<6;j++)out.push(p[k+j]);return new Float64Array(out);}
-function generate(b){let seed=b.seed>>>0;function rand(){seed=(Math.imul(1664525,seed)+1013904223)>>>0;return (seed+.5)/4294967296;}function normal(){return Math.sqrt(-2*Math.log(rand()))*Math.cos(2*Math.PI*rand());}const p=new Float64Array(b.n*6),bg=reference(b.energy),egx=b.emitX*1e-6/(bg.beta*bg.gamma),egy=b.emitY*1e-6/(bg.beta*bg.gamma);
- for(let k=0;k<p.length;k+=6){const ax=normal(),bx=normal(),ay=normal(),by=normal(),z=normal()*b.sigmaZ*1e-3,u=z*1e3;p[k]=Math.sqrt(egx*b.betaX)*ax;p[k+1]=Math.sqrt(egx/b.betaX)*(bx-b.alphaX*ax);p[k+2]=Math.sqrt(egy*b.betaY)*ay;p[k+3]=Math.sqrt(egy/b.betaY)*(by-b.alphaY*ay);p[k+4]=z;p[k+5]=normal()*b.sigmaDelta+b.poly.reduce((s,a,i)=>s+a*u**(i+1),0);}
- return p;}
-function validateBeam(b){for(const key of ['energy','emitX','emitY','betaX','betaY','sigmaZ'])if(!Number.isFinite(b[key])||b[key]<=0)throw Error('Beam '+key+' must be positive.');if(!Number.isInteger(b.n)||b.n<100||b.n>50000)throw Error('Use 100–50,000 particles.');if(!Number.isInteger(b.seed)||b.seed<0||b.seed>4294967295)throw Error('Seed must be an integer from 0 to 4294967295.');for(const key of ['alphaX','alphaY','sigmaDelta'])if(!Number.isFinite(b[key]))throw Error('Invalid beam '+key);if(b.sigmaDelta<0)throw Error('Energy spread cannot be negative.');if(!Array.isArray(b.poly)||b.poly.length!==4||b.poly.some(x=>!Number.isFinite(x)))throw Error('Four finite polynomial coefficients are required.');}
+const PROFILE_COORDS=['x','xp','y','yp','z','delta'];
+function profileSettings(b){
+ if(b.profiles!==undefined&&(!b.profiles||typeof b.profiles!=='object'||Array.isArray(b.profiles)))throw Error('Profiles must be a coordinate settings object.');
+ const profiles={};for(const key of PROFILE_COORDS){const value=b.profiles?.[key]??{shape:'gaussian',count:1,separation:1};if(!value||!['gaussian','uniform'].includes(value.shape))throw Error('Invalid '+key+' profile shape.');
+ if(!Number.isInteger(value.count)||value.count<1||value.count>20)throw Error(key+' profile must have 1–20 components.');
+ if(!Number.isFinite(value.separation)||value.separation<0)throw Error(key+' profile separation must be nonnegative.');
+ const max=value.count>1?Math.sqrt(12/(value.count**2-1)):Infinity;
+ if(value.count>1&&value.separation>=max)throw Error(key+' profile separation must be less than '+max.toFixed(4)+' total RMS for '+value.count+' components.');
+ profiles[key]={shape:value.shape,count:value.count,separation:value.separation};}return profiles;
+}
+function normalizedColumns(columns){
+ // Modified Gram–Schmidt: exact population covariance I, before the Twiss map.
+ // Finite-sample corrections slightly adjust later normalized-coordinate profiles.
+ const n=columns[0].length;for(let j=0;j<columns.length;j++){const col=columns[j];let mean=0;for(const v of col)mean+=v/n;for(let i=0;i<n;i++)col[i]-=mean;
+ for(let pass=0;pass<2;pass++)for(let k=0;k<j;k++){let projection=0;for(let i=0;i<n;i++)projection+=col[i]*columns[k][i]/n;for(let i=0;i<n;i++)col[i]-=projection*columns[k][i];}
+ let variance=0;for(const v of col)variance+=v*v/n;if(!(variance>1e-20))throw Error('Profile sample is degenerate. Change the random seed or reduce separation.');const scale=1/Math.sqrt(variance);for(let i=0;i<n;i++)col[i]*=scale;
+ }return columns;
+}
+function generate(b){validateBeam(b);let seed=b.seed>>>0;function rand(){seed=(Math.imul(1664525,seed)+1013904223)>>>0;return (seed+.5)/4294967296;}function normal(){return Math.sqrt(-2*Math.log(rand()))*Math.cos(2*Math.PI*rand());}
+ const profiles=profileSettings(b),columns=PROFILE_COORDS.map(key=>{const spec=profiles[key],d=spec.count>1?spec.separation:0,width=Math.sqrt(Math.max(0,1-d*d*(spec.count**2-1)/12)),col=new Float64Array(b.n),labels=Array.from({length:b.n},(_,i)=>i%spec.count);
+ // Independently shuffled balanced component labels avoid artificial 6D correlations.
+ for(let i=labels.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[labels[i],labels[j]]=[labels[j],labels[i]];}
+ for(let i=0;i<col.length;i++){const within=spec.shape==='gaussian'?normal():Math.sqrt(3)*(2*rand()-1);col[i]=(labels[i]-(spec.count-1)/2)*d+width*within;}return col;});
+ normalizedColumns(columns);const p=new Float64Array(b.n*6),bg=reference(b.energy),egx=b.emitX*1e-6/(bg.beta*bg.gamma),egy=b.emitY*1e-6/(bg.beta*bg.gamma);
+ for(let i=0;i<b.n;i++){const k=i*6,ax=columns[0][i],bx=columns[1][i],ay=columns[2][i],by=columns[3][i],z=columns[4][i]*b.sigmaZ*1e-3,u=z*1e3;p[k]=Math.sqrt(egx*b.betaX)*ax;p[k+1]=Math.sqrt(egx/b.betaX)*(bx-b.alphaX*ax);p[k+2]=Math.sqrt(egy*b.betaY)*ay;p[k+3]=Math.sqrt(egy/b.betaY)*(by-b.alphaY*ay);p[k+4]=z;p[k+5]=columns[5][i]*b.sigmaDelta+b.poly.reduce((sum,a,j)=>sum+a*u**(j+1),0);}
+ return p;
+}
+function validateBeam(b){for(const key of ['energy','emitX','emitY','betaX','betaY','sigmaZ'])if(!Number.isFinite(b[key])||b[key]<=0)throw Error('Beam '+key+' must be positive.');if(!Number.isInteger(b.n)||b.n<100||b.n>50000)throw Error('Use 100–50,000 particles.');if(!Number.isInteger(b.seed)||b.seed<0||b.seed>4294967295)throw Error('Seed must be an integer from 0 to 4294967295.');for(const key of ['alphaX','alphaY','sigmaDelta'])if(!Number.isFinite(b[key]))throw Error('Invalid beam '+key);if(b.sigmaDelta<0)throw Error('Energy spread cannot be negative.');if(!Array.isArray(b.poly)||b.poly.length!==4||b.poly.some(x=>!Number.isFinite(x)))throw Error('Four finite polynomial coefficients are required.');profileSettings(b);}
 function validate(line,screen,extra){if(!Number.isFinite(screen)||screen<0||!Number.isFinite(extra)||extra<0||screen+extra>1000)throw Error('Screen and extension must be nonnegative; plot end must be ≤1000 m.');if(!Array.isArray(line)||line.length>100)throw Error('Use at most 100 elements.');const sorted=line.map(e=>({...e})).sort((a,b)=>a.s-b.s);let end=0;for(const e of sorted){if(!['drift','quad','dipole','tdc','slit'].includes(e.type))throw Error('Unknown element type.');if(!Number.isFinite(e.s)||e.s<0||e.s>1000)throw Error('Element entrance must be between 0 and 1000 m.');if(!Number.isFinite(e.L)||e.L<0||(e.type!=='slit'&&e.L<.0001))throw Error('Finite elements need a length ≥0.0001 m.');if(e.s<end-1e-10)throw Error('Elements overlap. Edit entrance positions or lengths.');if(e.type==='slit'){if(e.L!==0)throw Error('Slits are zero-length apertures.');if(!['x','y'].includes(e.axis)||!Number.isFinite(e.width)||e.width<=0||!Number.isFinite(e.center))throw Error('Slit needs a valid axis, positive width and finite center.');}
  if(e.type==='quad'&&!Number.isFinite(e.G))throw Error('Invalid quadrupole gradient.');if(e.type==='dipole'){if(![e.angle,e.edgeIn,e.edgeOut].every(Number.isFinite)||Math.abs(e.angle)>179||Math.abs(e.edgeIn)>=85||Math.abs(e.edgeOut)>=85)throw Error('Bend angle must be within ±179°; edges within ±85°.');}if(e.type==='tdc'&&(!['x','y'].includes(e.axis)||![e.kappa,e.frequency,e.phase].every(Number.isFinite)||e.frequency<=0))throw Error('Invalid TDC settings.');end=Math.max(end,e.s+e.L);}return sorted;}
 function transport(initial,line,energy,screen,extra){
@@ -42,5 +66,5 @@ function transport(initial,line,energy,screen,extra){
  if(s>=limit-tol)break;}
  if(s<limit-tol)travel(limit,l=>drift(l,energy));if(screenParticles===null&&Math.abs(screen)<tol)screenParticles=initial;if(screenParticles===null)throw Error('Screen could not be evaluated.');return {points,particles:screenParticles,stats:fastStats(screenParticles),slits,end:limit};
 }
-const api={eye,mul,reference,drift,quad,bend,edge,tdc,map,stats,fastStats,slit,generate,validateBeam,validate,transport};if(typeof module!=='undefined')module.exports=api;else root.Optics=api;
+const api={PROFILE_COORDS,profileSettings,eye,mul,reference,drift,quad,bend,edge,tdc,map,stats,fastStats,slit,generate,validateBeam,validate,transport};if(typeof module!=='undefined')module.exports=api;else root.Optics=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

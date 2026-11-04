@@ -29,6 +29,24 @@ Changing an existing preset or adding new presets for a future class requires pu
 
 Student beamline work is kept separately for each preset in browser session storage, so switching away and back restores their tuning. **Reset lattice** restores the selected preset's starting lattice and screen. A newly published revision starts fresh workspaces on reload; students can save their beamline JSON first if needed. Names appear in the student selector; choose names that identify the exercise without revealing its hidden beam values.
 
+### Density profiles in all six normalized coordinates
+
+Instructor mode includes a **Density profiles** table for x, x′, y, y′, z, and uncorrelated δ. Each row has:
+
+- Gaussian or uniform component shape.
+- Number of equal-population components (1–20).
+- Center-to-center separation in units of the normalized coordinate's **total RMS**, rather than mm or mrad.
+
+For n equally spaced components with separation d, the normalized component RMS is `sqrt(1 − d²(n² − 1)/12)`. For n > 1, separation must be less than `sqrt(12/(n² − 1))`; the table shows this limit and the resulting component width. One component ignores the separation field. Uniform means a one-dimensional flat-top component with half-width `sqrt(3)` times its component RMS, not a uniform transverse disk. Two Gaussian components at separation 1.8 total RMS, for example, each have RMS width about 0.436 total RMS.
+
+The generator samples the chosen profiles, recenters them, and removes finite-sample correlations using modified Gram–Schmidt normalization. Their population covariance is the identity before the Twiss map. Consequently the specified transverse RMS emittances, beta and alpha, RMS bunch length, and uncorrelated momentum spread remain fixed when density profiles change. Small finite-sample corrections can slightly shift the nominal component spacings and reshape later normalized-coordinate marginals.
+
+The x′ and y′ rows shape **intrinsic normalized divergence before the Twiss correlation**: `x′ = sqrt(epsilon/beta) * (p_normalized − alpha*x_normalized)`, and similarly in y. At nonzero alpha, the physical angular marginal also contains the chosen position distribution. These controls shape normalized phase-space density; they are not independent prescriptions for all correlated physical marginals.
+
+The δ row shapes the uncorrelated momentum spread. The polynomial `delta += f(z)` is applied **after** profile normalization and the Twiss transformation, so it may change total energy spread, longitudinal covariance and mean momentum as intended. If uncorrelated RMS δ is zero, that profile has no effect until a nonzero spread is chosen.
+
+Click **Apply beam settings** to preview the profiles, then **Save preset changes**. Profile settings are stored separately in each preset and included in experiment backups and **Publish presets**. Existing presets without a profile definition use a single Gaussian in each coordinate. Profile controls remain hidden in student mode. The random seed reproduces the shaped sample, and component populations differ by at most one particle when the total is not divisible by the component count.
+
 ### GitHub authorization for publishing
 
 GitHub Pages serves static files. The classroom passcode unlocks the beam editor; writing shared defaults also requires authorization from GitHub.
@@ -101,6 +119,11 @@ Browser checks exercised instructor unlock, slit creation/editing, screen measur
 - `presets.test.js`: preset collection and publishing checks
 - `physics.js`: independent 6D transport engine
 - `physics.test.js`: analytic and behavioral validation
+- `density.test.js`: six-coordinate profile generation, exact second moments, chirp ordering and preset round trips
+
+Run `node density.test.js` to check profile shape changes, component separation, all six normalized-coordinate covariances, fixed emittances and Twiss parameters, and polynomial chirp ordering.
+
+Run `node app.test.js` to check preset/profile editing and switching through a minimal DOM adapter.
 
 Run `node presets.test.js` to check preset migration, selection, workspace isolation, published defaults and collection round trips.
 
