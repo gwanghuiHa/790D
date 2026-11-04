@@ -313,8 +313,8 @@
         "seed": 7902026,
         "emitX": 1,
         "emitY": 1,
-        "betaX": 10,
-        "betaY": 10,
+        "betaX": 400,
+        "betaY": 400,
         "alphaX": 0,
         "alphaY": 0,
         "sigmaZ": 1,
@@ -361,21 +361,19 @@
       "line": [
         {
           "id": 1,
-          "name": "B3",
-          "type": "dipole",
-          "s": 2.55,
-          "L": 0.3,
-          "angle": -20,
-          "edgeIn": -10,
-          "edgeOut": 0
+          "type": "quad",
+          "name": "Q2",
+          "s": 1.8,
+          "L": 0.2,
+          "G": 0.05
         }
       ],
-      "screen": 4,
+      "screen": 12,
       "extension": 0.5
     }
   ],
   "defaultPresetId": "preset-1",
   "activePresetId": "preset-340202ab-29ba-4b70-9a4d-747c39d7e643",
-  "revision": "1f5cf3eb-a601-4d27-a535-a81aeb7cf66b",
-  "publishedAt": "2026-11-04T04:00:17.834Z"
+  "revision": "cccacc13-8b10-4f75-ba31-808c7615f7d0",
+  "publishedAt": "2026-11-04T04:14:45.117Z"
 }
