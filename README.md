@@ -6,7 +6,7 @@ Interactive, browser-based electron beam transport for **Experimental Beam Diagn
 
 Enable GitHub Pages once: **Settings → Pages → Build and deployment → Deploy from a branch → main → / (root) → Save**. Once GitHub finishes deployment, open <https://gwanghuiha.github.io/790D/>.
 
-For offline use, download the repository ZIP, extract it, and open `index.html` in a modern browser. Keep `index.html`, `app.js`, `physics.js`, `settings.js`, `presets.js`, and `style.css` together. File-based offline mode uses the built-in beam; the hosted page reads the published `defaults.json`.
+For offline use, download the repository ZIP, extract it, and open `index.html` in a modern browser. Keep `index.html`, `app.js`, `physics.js`, `settings.js`, `presets.js`, `diagnostics.js`, and `style.css` together. File-based offline mode uses the built-in beam; the hosted page reads the published `defaults.json`.
 
 ## Lecture presets: prepare once, select during class
 
@@ -75,6 +75,14 @@ The instructor gate remains a classroom UI restriction, as requested. Beam gener
 - **Save beamline** and **Load beamline** handle the lattice and screen, without exporting or altering the beam. Each browser works independently. Its lattice is retained for the current published revision; a new revision starts from the newly published setup on reload. Save JSON for durable work.
 - **Reset lattice** returns to the selected preset’s starting lattice and screen, leaving the current beam unchanged.
 
+## Screen display resolution
+
+The x–y screen image uses **256 × 256** histogram bins by default; select 128 or 512 bins per axis to adjust resolution. The image keeps equal physical scales in x and y, and the optional image half-range applies to both. Histogram pixels are drawn as a raster without oversized overlapping bin rectangles or density smoothing.
+
+Profiles default to **Auto per plane** ranges, so a narrow x profile is not compressed into a range chosen for a much larger y extent. Choose **Match image** to compare profiles over the same physical range as the image. Automatic profile bin counts use a Freedman–Diaconis IQR-based width (32–512 bins, with a Scott-rule fallback for zero IQR). Manual counts are also available. Profiles show histogram steps, without smoothing, so multiple peaks and gaps remain visible. The note below the plots reports bin counts and physical bin widths.
+
+These controls affect display only. RMS sizes, centroids, transmission and particle tracking always use the original unbinned particle coordinates. Particle counts include histogram upper boundaries, and manually clipping the image does not exclude particles from the RMS calculation. Display settings do not alter saved presets or beamline files.
+
 ## Physics and conventions
 
 Coordinates are `[x, xprime, y, yprime, z, delta]`, in m, rad, m, rad, m, and fractional momentum deviation. Positive z is toward the bunch head; positive delta is higher momentum. Electron energy is kinetic energy in MeV. Transverse normalized emittances are in mm·mrad. Generated macroparticles are equally weighted; they do not represent an absolute current calibration.
@@ -117,6 +125,8 @@ The thick-cavity convention is consistent with the standard distributed-deflecto
 
 ## Validation
 
+Run `node diagnostics.test.js` for screen histogram and display-resolution checks.
+
 Run `node fringe.test.js` for the fixed finite-fringe model and compatibility with existing saved presets.
 
 Run `node physics.test.js` (Node.js 18+). The 17 checks cover reference rigidity, symplecticity, limiting maps, dipole dispersion and edges, thick-TDC coupling and affine composition, frequency/phase behavior, reproducible polynomial chirp, slit cuts, centered RMS, screen positioning, full particle loss, and invalid inputs.
@@ -128,6 +138,8 @@ Browser checks exercised instructor unlock, slit creation/editing, screen measur
 - `index.html`: page structure
 - `style.css`: responsive interface
 - `app.js`: editor, plotting, instructor controls, share links, save/load
+- `diagnostics.js`: non-mutating screen histogram/range preparation
+- `diagnostics.test.js`: histogram resolution, boundaries, count conservation and particle preservation
 - `defaults.json`: shared instructor setup loaded by the main student URL
 - `settings.js`: defaults loading, revision-aware session restoration, and authenticated GitHub publishing
 - `settings.test.js`: shared-defaults and publishing checks

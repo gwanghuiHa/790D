@@ -1,0 +1,10 @@
+/* Screen histogram preparation only; never modifies particles or RMS statistics. */
+(function(root){
+'use strict';
+function extent(p,index,scale=1e3){let radius=1e-9;for(let k=index;k<p.length;k+=6)radius=Math.max(radius,Math.abs(p[k]*scale));return radius*1.06;}
+function quantile(sorted,f){const pos=(sorted.length-1)*f,i=Math.floor(pos),t=pos-i;return sorted[i]*(1-t)+sorted[Math.min(i+1,sorted.length-1)]*t;}
+function autoBins(p,index,radius,scale=1e3){const values=[];for(let k=index;k<p.length;k+=6)values.push(p[k]*scale);if(values.length<2)return 32;values.sort((a,b)=>a-b);let width=2*(quantile(values,.75)-quantile(values,.25))/Math.cbrt(values.length);if(!(width>0)){let mean=0,v=0;for(const x of values)mean+=x/values.length;for(const x of values)v+=(x-mean)**2/values.length;width=3.5*Math.sqrt(v)/Math.cbrt(values.length);}return Math.max(32,Math.min(512,width>0?Math.ceil(2*radius/width):128));}
+function histogram1D(p,index,radius,n,scale=1e3){if(!(radius>0)||!Number.isInteger(n)||n<1)throw Error('Invalid histogram range or bins.');const bins=new Uint32Array(n),dx=2*radius/n;let included=0;for(let k=index;k<p.length;k+=6){const x=p[k]*scale;if(x< -radius||x>radius)continue;const j=Math.min(n-1,Math.floor((x+radius)/dx));if(j>=0){bins[j]++;included++;}}return {bins,dx,included};}
+function histogram2D(p,ix,iy,rx,ry,nx,ny=nx,sx=1e3,sy=1e3){if(!(rx>0&&ry>0)||![nx,ny].every(n=>Number.isInteger(n)&&n>0))throw Error('Invalid image range or bins.');const bins=new Uint32Array(nx*ny);let included=0,peak=0;for(let k=0;k<p.length;k+=6){const x=p[k+ix]*sx,y=p[k+iy]*sy;if(x< -rx||x>rx||y< -ry||y>ry)continue;const j=Math.min(nx-1,Math.floor((x+rx)/(2*rx)*nx)),i=Math.min(ny-1,Math.floor((y+ry)/(2*ry)*ny));if(j>=0&&i>=0){peak=Math.max(peak,++bins[i*nx+j]);included++;}}return {bins,peak,included,dx:2*rx/nx,dy:2*ry/ny};}
+const api={extent,autoBins,histogram1D,histogram2D};if(typeof module!=='undefined')module.exports=api;else root.ScreenDiagnostics=api;
+})(typeof globalThis!=='undefined'?globalThis:this);
