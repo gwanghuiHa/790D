@@ -6,18 +6,36 @@ Interactive, browser-based electron beam transport for **Experimental Beam Diagn
 
 Enable GitHub Pages once: **Settings → Pages → Build and deployment → Deploy from a branch → main → / (root) → Save**. Once GitHub finishes deployment, open <https://gwanghuiha.github.io/790D/>.
 
-For offline use, download the repository ZIP, extract it, and open `index.html` in a modern browser. Keep `index.html`, `app.js`, `physics.js`, and `style.css` together.
+For offline use, download the repository ZIP, extract it, and open `index.html` in a modern browser. Keep `index.html`, `app.js`, `physics.js`, `settings.js`, and `style.css` together. File-based offline mode uses the built-in beam; the hosted page reads the published `defaults.json`.
 
-## Instructor workflow
+## Instructor workflow: one stable student URL
 
-1. Click **Instructor**. The initial passcode is **`790D`**.
-2. Set the beam energy, normalized transverse RMS emittances and Twiss parameters, bunch length, uncorrelated momentum spread, particle count, and random seed. Click **Apply beam settings**.
-3. Optionally set the longitudinal polynomial coefficients. With `u = z / (1 mm)`, the initial correlation is `delta = delta_uncorr + a1*u + a2*u^2 + a3*u^3 + a4*u^4`. Coefficients describe fractional momentum deviation, not percent. For example, `a1 = 0.01` gives a 1% momentum change at z = +1 mm.
-4. Build a starting lattice if desired. Use **Change passcode** to choose a classroom passcode. This changes the current experiment, not every existing link.
-5. Click **Student link**, then distribute that link. It carries the chosen beam, starting lattice, screen settings, and passcode hash; it opens with beam controls and initial phase-space plots hidden.
-6. Save an **instructor experiment** JSON to retain the complete setup. To restore it, unlock Instructor mode and use **Load experiment**.
+Students always open **https://gwanghuiha.github.io/790D/**. The page loads `defaults.json` to obtain the shared beam, starting beamline, screen settings, and instructor passcode.
 
-The instructor gate is a classroom UI restriction, as requested. Beam generation and transport run in the browser; this is not a server-side secrecy or authentication system. Do not use a passcode reused for a real account. The default distribution in the repository changes only when source code is changed; instructor edits are distributed through student links or instructor experiment files.
+1. Click **Instructor**. The initial passcode is **`790D`** (unless you have published a different one).
+2. Set the beam energy, normalized transverse RMS emittances and Twiss parameters, bunch length, uncorrelated momentum spread, particle count, and random seed. Click **Apply beam settings** to preview.
+3. Optionally set the longitudinal polynomial coefficients. With `u = z / (1 mm)`, the initial correlation is `delta = delta_uncorr + a1*u + a2*u^2 + a3*u^3 + a4*u^4`. Coefficients are fractional momentum deviation per mmⁿ. For example, `a1 = 0.01` gives a 1% momentum change at z = +1 mm.
+4. Adjust the starting lattice/screen and use **Change passcode** if desired.
+5. Click **Publish defaults**, then **Publish for all students**. This saves the beam, starting lattice, screen, and passcode to the GitHub repository. The latest beam input fields are included even if you have not pressed Apply. Element and screen edits must be applied first.
+6. Allow GitHub Pages a short time to deploy, then have students reload the same main URL. **Student URL** copies that short address; it never embeds the beam settings.
+
+### GitHub authorization for publishing
+
+GitHub Pages serves static files. The classroom passcode unlocks the beam editor; writing shared defaults also requires authorization from GitHub.
+
+Create a [fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) for owner **gwanghuiHa**, selecting only the **790D** repository, with **Contents: read and write** permission. Choose an expiration suitable for your use. Enter it in the simulator's publish dialog. No token is included in the code, repository, student URL, JSON exports, local storage, or session storage. It is sent only to `api.github.com` and retained in memory until you lock instructor mode or reload the page. A rejected/expired token is cleared. Never send it in chat.
+
+Publishing updates only `defaults.json` on `main`, using its current GitHub blob SHA to detect conflicting changes. A successful save means the GitHub commit succeeded; Pages deployment follows separately. If another instructor publishes after your page loads, save your experiment, reload, load your experiment, and publish again.
+
+### Local work and older links
+
+- Beam/passcode edits are local until **Publish defaults** succeeds. Save an **instructor experiment** JSON for an independent backup.
+- If you had a setup saved in the previous version's browser session, **Restore previous local setup** appears after unlocking Instructor mode. Restore it, then publish it. The initial shared defaults otherwise match the original 44 MeV example.
+- Students can tune their own lattice without changing the published beam. Their session lattice is restored only while the published revision matches. After a newly published revision is deployed, reloading uses the new shared setup; save a beamline JSON first if you want to retain your lattice.
+- Previously generated long experiment links still work as fixed snapshots. Distribute the plain main URL for shared updates.
+- If the published defaults cannot be loaded or validated online, the page displays an error instead of silently simulating a different beam. File-based offline use falls back to the built-in example; use the hosted page to obtain published defaults.
+
+The instructor gate remains a classroom UI restriction, as requested. Beam generation and transport run in the browser. The shared passcode is stored as a hash; GitHub's write authorization controls who can publish changes.
 
 ## Student workflow
 
@@ -26,8 +44,8 @@ The instructor gate is a classroom UI restriction, as requested. Beam generation
 - Edit properties and click **Apply element**. Pressing Enter in an element input also applies it.
 - Move the virtual screen using its position field and **Apply screen settings**, the slider, or a click on the envelope. Set the desired distance beyond the screen independently.
 - View the RMS x/y envelope, x–y screen image, x/y profiles, RMS sizes, surviving macroparticle count, and transmission relative to the generated population.
-- **Save beamline** and **Load beamline** handle the lattice and screen, without exporting or altering the beam. Each browser works independently. A session snapshot is retained; opening/reloading an experiment link reapplies its starting configuration. Save JSON for durable work.
-- **Reset lattice** returns to the configuration at page startup, leaving the current beam unchanged.
+- **Save beamline** and **Load beamline** handle the lattice and screen, without exporting or altering the beam. Each browser works independently. Its lattice is retained for the current published revision; a new revision starts from the newly published setup on reload. Save JSON for durable work.
+- **Reset lattice** returns to the published starting lattice and screen, leaving the current beam unchanged.
 
 ## Physics and conventions
 
@@ -66,7 +84,12 @@ Browser checks exercised instructor unlock, slit creation/editing, screen measur
 - `index.html`: page structure
 - `style.css`: responsive interface
 - `app.js`: editor, plotting, instructor controls, share links, save/load
+- `defaults.json`: shared instructor setup loaded by the main student URL
+- `settings.js`: defaults loading, revision-aware session restoration, and authenticated GitHub publishing
+- `settings.test.js`: shared-defaults and publishing checks
 - `physics.js`: independent 6D transport engine
 - `physics.test.js`: analytic and behavioral validation
+
+Run `node settings.test.js` to check shared-defaults loading, revision changes, passcode preservation, GitHub publishing, conflicts, denied authorization, and error handling. These use mocked GitHub requests and no credentials.
 
 No packages or installation are needed to run the simulator.

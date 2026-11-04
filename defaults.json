@@ -1,0 +1,46 @@
+{
+  "format": "790D-experiment",
+  "version": 1,
+  "revision": "initial-shared-defaults",
+  "publishedAt": null,
+  "beam": {
+    "energy": 44,
+    "n": 12000,
+    "seed": 7902026,
+    "emitX": 2,
+    "emitY": 2,
+    "betaX": 3,
+    "betaY": 3,
+    "alphaX": 0,
+    "alphaY": 0,
+    "sigmaZ": 1,
+    "sigmaDelta": 0.001,
+    "poly": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "line": [
+    {
+      "id": 1,
+      "name": "Q1",
+      "type": "quad",
+      "s": 1,
+      "L": 0.15,
+      "G": 1.2
+    },
+    {
+      "id": 2,
+      "name": "Q2",
+      "type": "quad",
+      "s": 2,
+      "L": 0.15,
+      "G": -1.2
+    }
+  ],
+  "screen": 4,
+  "extension": 0.5,
+  "passHash": "be197c9971ea3319b5bdf7e37321ad86256aaf5a3bed0da5875142418ca194f2"
+}

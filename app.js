@@ -5,6 +5,7 @@ const clone=x=>JSON.parse(JSON.stringify(x));
 const defaultBeam={energy:44,n:12000,seed:7902026,emitX:2,emitY:2,betaX:3,betaY:3,alphaX:0,alphaY:0,sigmaZ:1,sigmaDelta:.001,poly:[0,0,0,0]};
 const defaultLine=[{id:1,name:'Q1',type:'quad',s:1,L:.15,G:1.2},{id:2,name:'Q2',type:'quad',s:2,L:.15,G:-1.2}];
 let beam=clone(defaultBeam),line=clone(defaultLine),screen=4,extension=.5,selected=1,teacher=false,initial,result,passHash='',loadKind='beamline',timer,plotMap,latticeHits=[],baseLine=clone(defaultLine),baseScreen=4,baseExtra=.5;
+let defaultsRevision='',githubToken='',publishedSetup=null,publishing=false;
 const colors={drift:'#93a7b4',quad:'#377eaa',dipole:'#ba8b35',tdc:'#8d65aa',slit:'#40856c'},symbols={drift:'D',quad:'Q',dipole:'B',tdc:'RF',slit:'S'};
 const fmt=(v,d=3)=>v===null||!Number.isFinite(v)?'—':(Math.abs(v)>0&&Math.abs(v)<.001||Math.abs(v)>=1e5?v.toExponential(2):Number(v.toFixed(d)).toString());
 function status(text,error=false){$('status').textContent=text;$('status').classList.toggle('error',error);}
@@ -25,8 +26,8 @@ function cleanBeam(b){if(!b||typeof b!=='object')throw Error('Missing beam defin
 function validateExperiment(o){if(o.format!=='790D-experiment'||o.version!==1)throw Error('Not a supported instructor experiment.');const b=cleanBeam(o.beam),l=cleanLine(o.line);P.validate(l,o.screen,o.extension);return {b,l};}
 function download(data,name){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function packExperiment(){return {format:'790D-experiment',version:1,beam:clone(beam),line:clone(line),screen,extension,passHash};}
-function persist(){try{sessionStorage.setItem('790D-workspace',JSON.stringify({...packExperiment(),teacher:false}));}catch{}}
-function setTeacher(on){teacher=on;document.querySelectorAll('.teacher').forEach(e=>e.hidden=!on);$('modeTag').textContent=on?'Instructor mode':'Student mode';$('instructorToggle').textContent=on?'Lock beam':'Instructor';$('modeTag').style.background=on?'#665227':'';if(on){renderBeam();drawInitial();}}
+function persist(){try{sessionStorage.setItem('790D-workspace',JSON.stringify({defaultsRevision,line:clone(line),screen,extension}));}catch{}}
+function setTeacher(on){teacher=on;if(!on){githubToken='';$('githubToken').value='';}document.querySelectorAll('.teacher').forEach(e=>e.hidden=!on);$('modeTag').textContent=on?'Instructor mode':'Student mode';$('instructorToggle').textContent=on?'Lock beam':'Instructor';$('modeTag').style.background=on?'#665227':'';if(on){renderBeam();drawInitial();try{$('restoreLocalDraft').hidden=!sessionStorage.getItem('790D-local-draft');}catch{$('restoreLocalDraft').hidden=true;}}}
 function renderBeam(){const specs=[['energy','Kinetic energy [MeV]'],['n','Macroparticles'],['seed','Random seed'],['sigmaZ','RMS bunch length [mm]'],['emitX','Normalized εx [mm·mrad]'],['betaX','βx [m]'],['alphaX','αx'],['sigmaDelta','Uncorrelated RMS δ'],['emitY','Normalized εy [mm·mrad]'],['betaY','βy [m]'],['alphaY','αy']];$('beamFields').replaceChildren();for(const [key,title] of specs)addField($('beamFields'),title,key,beam[key],null,'beam_');$('polyFields').replaceChildren();for(let i=0;i<4;i++)addField($('polyFields'),'a'+(i+1)+' [mm⁻'+(i+1)+']','a'+i,beam.poly[i],null,'beam_');}
 function addField(parent,title,key,value,options=null,prefix='el_'){const label=document.createElement('label');label.textContent=title;const input=document.createElement(options?'select':'input');input.id=prefix+key;if(options){for(const [v,t] of options){const o=document.createElement('option');o.value=v;o.textContent=t;input.append(o);}}else{input.type=key==='name'?'text':'number';input.step='any';}input.value=value;label.append(input);parent.append(label);return input;}
 function renderList(){const list=$('elementList');list.replaceChildren();$('elementCount').textContent=line.length+' elements';for(const e of [...line].sort((a,b)=>a.s-b.s)){const b=document.createElement('button');b.className='element-card'+(e.id===selected?' active':'');b.dataset.type=e.type;const icon=document.createElement('span');icon.className='symbol';icon.textContent=symbols[e.type];const text=document.createElement('span');text.className='text';const name=document.createElement('strong');name.textContent=e.name;const sub=document.createElement('small');sub.textContent=e.type.toUpperCase()+' · s '+fmt(e.s)+' m'+(e.L?' · L '+fmt(e.L)+' m':'');text.append(name,sub);b.append(icon,text);b.onclick=()=>{selected=e.id;renderList();renderEditor();drawLattice();};list.append(b);}if(!line.length){const p=document.createElement('p');p.className='muted';p.textContent='Empty lattice. Add an element to begin.';list.append(p);}renderEditor();}
@@ -62,11 +63,53 @@ $('saveExperiment').onclick=()=>{if(teacher)download(packExperiment(),'790D-inst
 $('load').onclick=()=>{loadKind='beamline';$('file').click();};$('loadExperiment').onclick=()=>{if(teacher){loadKind='experiment';$('file').click();}};
 $('file').onchange=async()=>{const file=$('file').files[0];if(!file)return;try{if(file.size>1000000)throw Error('Configuration must be smaller than 1 MB.');const o=JSON.parse(await file.text());if(loadKind==='experiment'){if(!teacher)throw Error('Unlock instructor mode first.');const {b,l}=validateExperiment(o);const generated=P.generate(b);P.transport(generated,l,b.energy,o.screen,o.extension);beam=b;initial=generated;line=l;screen=o.screen;extension=o.extension;if(o.passHash)passHash=o.passHash;renderBeam();}else{if(o.format!=='790D-beamline'||o.version!==1)throw Error('Load a student beamline file. Instructor experiments require instructor mode.');const l=cleanLine(o.line);P.validate(l,o.screen,o.extension);line=l;screen=o.screen;extension=o.extension;}selected=line[0]?.id;renderList();run();}catch(e){status('Load failed: '+e.message,true);}finally{$('file').value='';}};
 $('instructorToggle').onclick=async()=>{if(teacher){setTeacher(false);return;}const s=prompt('Instructor passcode');if(s===null)return;try{if(await hash(s)!==passHash){status('Incorrect instructor passcode.',true);return;}setTeacher(true);status('Instructor mode unlocked. Beam settings are editable.');}catch(e){status('Could not unlock instructor mode: '+e.message,true);}};
-$('changePass').onclick=async()=>{if(!teacher)return;const s=prompt('New instructor passcode (at least 4 characters)');if(s===null)return;if(s.length<4){status('Use at least 4 characters.',true);return;}passHash=await hash(s);persist();status('Passcode updated. Generate a new student link to include this change.');};
+$('changePass').onclick=async()=>{if(!teacher)return;const s=prompt('New instructor passcode (at least 4 characters)');if(s===null)return;if(s.length<4){status('Use at least 4 characters.',true);return;}passHash=await hash(s);persist();status('Passcode changed in this session. Click Publish defaults to apply it to the main student page.');};
 $('applyBeam').onclick=()=>{if(!teacher)return;try{const b=clone(beam);for(const key of Object.keys(defaultBeam))if(key!=='poly')b[key]=Number($('beam_'+key).value);b.poly=Array.from({length:4},(_,i)=>Number($('beam_a'+i).value));P.validateBeam(b);const generated=P.generate(b);P.transport(generated,line,b.energy,screen,extension);beam=b;initial=generated;run();}catch(e){status(e.message,true);}};
-$('share').onclick=()=>{if(!teacher)return;const url=new URL(location.href);url.hash='experiment='+encoded(packExperiment());$('studentLink').value=url.href;$('linkDialog').showModal();};$('closeLink').onclick=()=>$('linkDialog').close();$('copyLink').onclick=async()=>{try{await navigator.clipboard.writeText($('studentLink').value);$('copyLink').textContent='Copied';setTimeout(()=>$('copyLink').textContent='Copy link',1500);}catch{$('studentLink').select();status('Select and copy the student link from the dialog.');}};
+$('restoreLocalDraft').onclick=()=>{if(!teacher)return;try{const o=JSON.parse(sessionStorage.getItem('790D-local-draft')),validated=validateExperiment(o),generated=P.generate(validated.b);P.transport(generated,validated.l,validated.b.energy,o.screen,o.extension);beam=validated.b;line=validated.l;screen=o.screen;extension=o.extension;if(o.passHash)passHash=o.passHash;initial=generated;selected=line[0]?.id;renderBeam();renderList();run();status('Previous local setup restored. Click Publish defaults to make it the shared setup.');}catch(e){status('Could not restore previous setup: '+e.message,true);}};
+function studentURL(){const url=new URL(location.href);url.hash='';url.search='';return url.href;}
+$('share').onclick=()=>{if(!teacher)return;$('studentLink').value=studentURL();$('linkDialog').showModal();};$('closeLink').onclick=()=>$('linkDialog').close();$('copyLink').onclick=async()=>{try{await navigator.clipboard.writeText($('studentLink').value);$('copyLink').textContent='Copied';setTimeout(()=>$('copyLink').textContent='Copy link',1500);}catch{$('studentLink').select();status('Select and copy the student URL from the dialog.');}};
+function beamFromFields(){const b=clone(beam);for(const key of Object.keys(defaultBeam))if(key!=='poly')b[key]=Number($('beam_'+key).value);b.poly=Array.from({length:4},(_,i)=>Number($('beam_a'+i).value));P.validateBeam(b);return b;}
+$('publishDefaults').onclick=()=>{if(!teacher)return;try{const b=beamFromFields();P.transport(P.generate(b),line,b.energy,screen,extension);$('publishSummary').textContent=`Publish ${b.energy} MeV, ${b.n.toLocaleString()} particles, ${line.length} elements, and screen at ${fmt(screen)} m.`;$('tokenLabel').hidden=!!githubToken;$('githubToken').value='';$('publishMessage').textContent='';$('publishDialog').showModal();}catch(e){status(e.message,true);}};
+function closePublish(){if(publishing)return;$('githubToken').value='';$('publishDialog').close();}
+$('cancelPublish').onclick=closePublish;
+$('publishDialog').addEventListener('cancel',e=>{if(publishing)e.preventDefault();else $('githubToken').value='';});
+$('confirmPublish').onclick=async()=>{
+ if(!teacher||publishing)return;
+ let token=githubToken||$('githubToken').value.trim();$('githubToken').value='';
+ if(!token){$('publishMessage').textContent='Enter a GitHub token to save defaults to the repository.';return;}
+ publishing=true;$('confirmPublish').disabled=true;$('cancelPublish').disabled=true;$('publishMessage').textContent='Saving defaults to GitHub…';
+ try{
+  const b=beamFromFields(),snapshot={...packExperiment(),beam:b};validateExperiment(snapshot);const generated=P.generate(b);P.transport(generated,snapshot.line,b.energy,snapshot.screen,snapshot.extension);
+  const saved=await SharedSettings.publish(snapshot,token,defaultsRevision);
+  githubToken=token;beam=b;initial=generated;defaultsRevision=saved.settings.revision;publishedSetup=clone(saved.settings);baseLine=clone(line);baseScreen=screen;baseExtra=extension;
+  run();$('defaultsNote').textContent='Defaults saved to GitHub. Students receive this setup after Pages deploys and they reload.';$('publishDialog').close();status('Defaults saved to GitHub. Allow a short time for Pages deployment; students keep using '+studentURL());
+ }catch(e){githubToken='';$('tokenLabel').hidden=false;$('publishMessage').textContent=e.message;}
+ finally{token='';publishing=false;$('confirmPublish').disabled=false;$('cancelPublish').disabled=false;}
+};
 window.addEventListener('resize',()=>{clearTimeout(timer);timer=setTimeout(draw,100);});
-async function boot(){let bootError='';try{passHash=await hash('790D');if(location.hash.startsWith('#experiment=')){const o=decoded(location.hash.slice(12)),{b,l}=validateExperiment(o);beam=b;line=l;screen=o.screen;extension=o.extension;if(typeof o.passHash==='string'&&/^[a-f0-9]{64}$/.test(o.passHash))passHash=o.passHash;}else{const saved=sessionStorage.getItem('790D-workspace');if(saved){const o=JSON.parse(saved),{b,l}=validateExperiment(o);beam=b;line=l;screen=o.screen;extension=o.extension;if(o.passHash)passHash=o.passHash;}}}catch(e){bootError='Could not restore configuration: '+e.message;beam=clone(defaultBeam);line=clone(defaultLine);screen=4;extension=.5;}
- initial=P.generate(beam);baseLine=clone(line);baseScreen=screen;baseExtra=extension;selected=line[0]?.id;setTeacher(false);renderList();run();if(bootError)status(bootError,true);
+async function boot(){
+ let notice='';
+ try{
+  passHash=await hash('790D');
+  if(location.protocol==='file:'){
+   publishedSetup={...packExperiment(),revision:'offline-built-in'};notice='Offline mode: built-in defaults. Published defaults require the hosted page.';
+  }else{
+   publishedSetup=await SharedSettings.load();validateExperiment(publishedSetup);
+   if(typeof publishedSetup.passHash!=='string'||!/^[a-f0-9]{64}$/.test(publishedSetup.passHash))throw Error('Published instructor passcode is invalid.');
+  }
+  defaultsRevision=publishedSetup.revision;
+  let start=publishedSetup;
+  if(location.hash.startsWith('#experiment=')){
+   // Preserve old classroom links; all newly copied student URLs are short.
+   start=decoded(location.hash.slice(12));validateExperiment(start);notice='Legacy experiment link loaded. Use Student URL for the shared main page.';
+  }else{
+   try{const saved=JSON.parse(sessionStorage.getItem('790D-workspace')||'null');if(saved?.format==='790D-experiment'&&saved.beam&&!saved.defaultsRevision)sessionStorage.setItem('790D-local-draft',JSON.stringify(saved));start=SharedSettings.restoreLattice(publishedSetup,saved);validateExperiment(start);}catch{start=publishedSetup;}
+  }
+  const {b,l}=validateExperiment(start);beam=b;line=l;screen=start.screen;extension=start.extension;passHash=start.passHash||publishedSetup.passHash;
+  initial=P.generate(beam);baseLine=clone(publishedSetup.line);baseScreen=publishedSetup.screen;baseExtra=publishedSetup.extension;selected=line[0]?.id;
+  setTeacher(false);renderList();run();$('defaultsNote').textContent='The main student URL loads the published setup. After editing, click Publish defaults to save changes for everyone.';if(notice)status(notice);
+ }catch(e){
+  document.querySelectorAll('main button, main input, main select').forEach(el=>el.disabled=true);$('instructorToggle').disabled=true;clearResults();status('Could not load the shared setup: '+e.message,true);
+ }
 }
 boot();
