@@ -96,7 +96,7 @@
         "emitY": 1e-10,
         "betaX": 3,
         "betaY": 3,
-        "alphaX": -1,
+        "alphaX": 0,
         "alphaY": 0,
         "sigmaZ": 1,
         "sigmaDelta": 0.001,
@@ -105,27 +105,53 @@
           0,
           0,
           0
-        ]
+        ],
+        "profiles": {
+          "x": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "xp": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "y": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "yp": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "z": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "delta": {
+            "shape": "uniform",
+            "count": 5,
+            "separation": 0.70710677411548
+          }
+        }
       },
       "line": [
         {
           "id": 1,
-          "name": "Q1",
-          "type": "quad",
-          "s": 1,
-          "L": 0.15,
-          "G": 1.2
-        },
-        {
-          "id": 2,
-          "name": "Q2",
-          "type": "quad",
-          "s": 2,
-          "L": 0.15,
-          "G": -1.2
+          "name": "B3",
+          "type": "dipole",
+          "s": 2.55,
+          "L": 0.2,
+          "angle": 10,
+          "edgeIn": 0,
+          "edgeOut": 0
         }
       ],
-      "screen": 4,
+      "screen": 4.25,
       "extension": 0.5
     },
     {
@@ -148,7 +174,39 @@
           0,
           0,
           0
-        ]
+        ],
+        "profiles": {
+          "x": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "xp": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "y": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "yp": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "z": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "delta": {
+            "shape": "uniform",
+            "count": 5,
+            "separation": 0.7071
+          }
+        }
       },
       "line": [
         {
@@ -191,7 +249,39 @@
           0,
           0,
           0
-        ]
+        ],
+        "profiles": {
+          "x": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "xp": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "y": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "yp": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "z": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "delta": {
+            "shape": "uniform",
+            "count": 5,
+            "separation": 0.7071
+          }
+        }
       },
       "line": [
         {
@@ -216,7 +306,7 @@
     }
   ],
   "defaultPresetId": "preset-1",
-  "activePresetId": "preset-7f7e6122-3c9c-4b7c-90a0-b3fd48ec2e37",
-  "revision": "3fd556d3-3213-492b-bda1-777340a53e2b",
-  "publishedAt": "2026-11-04T01:05:40.047Z"
+  "activePresetId": "preset-f3a3acee-2561-48cf-a762-719282380efd",
+  "revision": "23b4d3d7-de56-4ba4-8d11-a5fbd0487b27",
+  "publishedAt": "2026-11-04T01:23:06.510Z"
 }
