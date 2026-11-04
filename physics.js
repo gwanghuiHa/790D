@@ -9,7 +9,11 @@ function drift(L,E){let m=eye();m[0][1]=m[2][3]=L;m[4][5]=L/reference(E).gamma**
 function plane(K,L){if(Math.abs(K)<1e-16)return [[1,L],[0,1]];const k=Math.sqrt(Math.abs(K)),f=k*L;return K>0?[[Math.cos(f),Math.sin(f)/k],[-k*Math.sin(f),Math.cos(f)]]:[[Math.cosh(f),Math.sinh(f)/k],[k*Math.sinh(f),Math.cosh(f)]];}
 function quad(L,G,E){let m=drift(L,E);for(const [i,K] of [[0,G/reference(E).brho],[2,-G/reference(E).brho]]){const q=plane(K,L);m[i][i]=q[0][0];m[i][i+1]=q[0][1];m[i+1][i]=q[1][0];m[i+1][i+1]=q[1][1];}return m;}
 function bend(L,theta,E){if(Math.abs(theta)<1e-10)return drift(L,E);const h=theta/L,s=Math.sin(theta),c=Math.cos(theta),d=1-c;let m=drift(L,E);m[0][0]=m[1][1]=c;m[0][1]=s/h;m[1][0]=-h*s;m[0][5]=d/h;m[1][5]=s;m[4][0]=-s;m[4][1]=-d/h;m[4][5]-=(theta-s)/h;return m;}
-function edge(h,angle){let m=eye();m[1][0]=h*Math.tan(angle);m[3][2]=-h*Math.tan(angle);return m;}
+// Fixed teaching-model assumptions: 20 mm full gap, conventional FINT=0.5.
+// MAD-X convention uses psi = 2*HGAP*FINT*h*(1+sin(e)^2)/cos(e).
+const DIPOLE_FRINGE=Object.freeze({halfGap:.010,fint:.5});
+function fringePsi(h,angle,halfGap=DIPOLE_FRINGE.halfGap,fint=DIPOLE_FRINGE.fint){return 2*halfGap*fint*h*(1+Math.sin(angle)**2)/Math.cos(angle);}
+function edge(h,angle,halfGap=DIPOLE_FRINGE.halfGap,fint=DIPOLE_FRINGE.fint){if(h===0)return eye();let m=eye();m[1][0]=h*Math.tan(angle);m[3][2]=-h*Math.tan(angle-fringePsi(h,angle,halfGap,fint));return m;}
 // Uniform distributed deflector, ultrarelativistic transit approximation.
 // This exact thick map includes R_(delta,z)=k^2 L/6, not a drift-kick-drift surrogate.
 function tdc(L,kappa,axis,frequency,phase,E){
@@ -66,5 +70,5 @@ function transport(initial,line,energy,screen,extra){
  if(s>=limit-tol)break;}
  if(s<limit-tol)travel(limit,l=>drift(l,energy));if(screenParticles===null&&Math.abs(screen)<tol)screenParticles=initial;if(screenParticles===null)throw Error('Screen could not be evaluated.');return {points,particles:screenParticles,stats:fastStats(screenParticles),slits,end:limit};
 }
-const api={PROFILE_COORDS,profileSettings,eye,mul,reference,drift,quad,bend,edge,tdc,map,stats,fastStats,slit,generate,validateBeam,validate,transport};if(typeof module!=='undefined')module.exports=api;else root.Optics=api;
+const api={DIPOLE_FRINGE,fringePsi,PROFILE_COORDS,profileSettings,eye,mul,reference,drift,quad,bend,edge,tdc,map,stats,fastStats,slit,generate,validateBeam,validate,transport};if(typeof module!=='undefined')module.exports=api;else root.Optics=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

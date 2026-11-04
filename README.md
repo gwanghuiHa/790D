@@ -81,7 +81,21 @@ Coordinates are `[x, xprime, y, yprime, z, delta]`, in m, rad, m, rad, m, and fr
 
 - **Drift:** transverse drift and first-order velocity slip `R56 = L/gamma^2`.
 - **Quadrupole:** exact thick focusing/defocusing matrices; positive gradient focuses x. Strength uses the reference electron magnetic rigidity. Includes drift-like longitudinal velocity slip.
-- **Dipole:** horizontal sector-body matrix with editable body angle and independent hard-edge entrance/exit angles. Includes dispersion, transverse/path-length coupling, geometric R56, and velocity slip. No combined-function gradient or fringe-gap correction. For a rectangular bend, set each edge to half the bend angle using the displayed signed convention. Edge angles remain independent when the body angle changes.
+- **Dipole:** horizontal sector-body matrix with editable body angle and independent geometric entrance/exit edge angles. Includes dispersion, transverse/path-length coupling, geometric R56, velocity slip, and a finite-fringe correction to the vertical edge kick. No combined-function gradient. For a rectangular bend, set each edge to half the bend angle using the displayed signed convention. Edge angles remain independent when the body angle changes.
+  The edge matrices use the MAD-X convention, with `h = angle/L`, geometric pole-face angle `e`, `R21 = h*tan(e)`, and `R43 = -h*tan(e - psi)`, where:
+
+  ```text
+  psi = 2 * HGAP * FINT * h * (1 + sin(e)^2) / cos(e)
+  HGAP = 0.010 m  (20 mm full gap)
+  FINT = 0.5
+  ```
+
+  `FINT=0.5` is a conventional fringe-integral choice. The 20 mm full gap is a fixed teaching-model assumption, not a universal magnet gap. Psi is computed separately at each face and changes with curvature and geometric edge angle; it is not an arbitrary constant angle. These parameters are not exposed as controls. At zero geometric edge angle the correction is a weak **vertical defocusing** kick, for either bend direction. At nonzero edge angles it modifies the existing edge focusing. The horizontal edge kick and sector-body matrix are unchanged. This remains a linear thin-edge representation of the integrated fringe effect, not field-map tracking through an extended fringe region.
+
+  Existing preset/element files require no new fields: previously saved bend angles, edge angles, lengths, beam definitions and passcodes are retained. Their vertical transport now includes the corrected fringe optics; numerical results from old hard-edge calculations can therefore change. Gap is not treated as an aperture, no element lengths are added, and all screen positions remain path-length coordinates.
+
+  Formula reference: [Fermilab TM-2753-AD, Appendix A.1](https://lss.fnal.gov/archive/test-tm/2000/fermilab-tm-2753-ad.pdf). The half-gap convention includes the factor of two explicitly.
+
 - **TDC:** uniform distributed, ultrarelativistic thick-cavity matrix. Set length L, zero-crossing strength kappa [1/m], x/y deflection, frequency [GHz], and phase [deg]. Defaults are 1.3 GHz and 0 degrees. At fixed kappa, the linear slope is `k = kappa*cos(phase)` and the centroid angular kick is `b = kappa*sin(phase)/kRF`, where `kRF = 2*pi*f/(beta*c)`. Frequency therefore changes the off-phase centroid kick at fixed kappa, while the zero-crossing slope remains fixed. A positive phase is defined to give a positive centroid kick for positive kappa.
 
   In the selected transverse plane u, the thick-cavity map is:
@@ -103,6 +117,8 @@ The thick-cavity convention is consistent with the standard distributed-deflecto
 
 ## Validation
 
+Run `node fringe.test.js` for the fixed finite-fringe model and compatibility with existing saved presets.
+
 Run `node physics.test.js` (Node.js 18+). The 17 checks cover reference rigidity, symplecticity, limiting maps, dipole dispersion and edges, thick-TDC coupling and affine composition, frequency/phase behavior, reproducible polynomial chirp, slit cuts, centered RMS, screen positioning, full particle loss, and invalid inputs.
 
 Browser checks exercised instructor unlock, slit creation/editing, screen measurements before and after the slit, and student JSON export. Browser upload approval was declined, so the file-picker load round trip was not verified in that browser session.
@@ -119,6 +135,7 @@ Browser checks exercised instructor unlock, slit creation/editing, screen measur
 - `presets.test.js`: preset collection and publishing checks
 - `physics.js`: independent 6D transport engine
 - `physics.test.js`: analytic and behavioral validation
+- `fringe.test.js`: finite-fringe sign, symplecticity, transport boundaries and legacy-file compatibility
 - `density.test.js`: six-coordinate profile generation, exact second moments, chirp ordering and preset round trips
 
 Run `node density.test.js` to check profile shape changes, component separation, all six normalized-coordinate covariances, fixed emittances and Twiss parameters, and polynomial chirp ordering.
