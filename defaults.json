@@ -41,6 +41,182 @@
   "screen": 4,
   "extension": 0.5,
   "passHash": "bf0f9dd362d58642195786ce0888d82e49e3998aef4e16b709241f73b831bf2a",
-  "revision": "c8e0d6eb-80b9-4972-971b-3cd4639ed433",
-  "publishedAt": "2026-11-04T00:39:05.200Z"
+  "presets": [
+    {
+      "id": "preset-1",
+      "name": "Preset 1",
+      "beam": {
+        "energy": 44,
+        "n": 12000,
+        "seed": 7902026,
+        "emitX": 2,
+        "emitY": 2,
+        "betaX": 3,
+        "betaY": 3,
+        "alphaX": 0,
+        "alphaY": 0,
+        "sigmaZ": 1,
+        "sigmaDelta": 0.001,
+        "poly": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "line": [
+        {
+          "id": 1,
+          "name": "Q1",
+          "type": "quad",
+          "s": 1,
+          "L": 0.15,
+          "G": 1.2
+        },
+        {
+          "id": 2,
+          "name": "Q2",
+          "type": "quad",
+          "s": 2,
+          "L": 0.15,
+          "G": -1.2
+        }
+      ],
+      "screen": 4,
+      "extension": 0.5
+    },
+    {
+      "id": "preset-ecea14be-8724-43e4-99cd-b183fa9b9e71",
+      "name": "Energy_spread_1",
+      "beam": {
+        "energy": 44,
+        "n": 12000,
+        "seed": 7902026,
+        "emitX": 1e-10,
+        "emitY": 1e-10,
+        "betaX": 3,
+        "betaY": 3,
+        "alphaX": -1,
+        "alphaY": 0,
+        "sigmaZ": 1,
+        "sigmaDelta": 0.001,
+        "poly": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "line": [
+        {
+          "id": 1,
+          "name": "Q1",
+          "type": "quad",
+          "s": 1,
+          "L": 0.15,
+          "G": 1.2
+        },
+        {
+          "id": 2,
+          "name": "Q2",
+          "type": "quad",
+          "s": 2,
+          "L": 0.15,
+          "G": -1.2
+        }
+      ],
+      "screen": 4,
+      "extension": 0.5
+    },
+    {
+      "id": "preset-f3a3acee-2561-48cf-a762-719282380efd",
+      "name": "Energy_spread_2",
+      "beam": {
+        "energy": 44,
+        "n": 12000,
+        "seed": 7902026,
+        "emitX": 1,
+        "emitY": 1,
+        "betaX": 10,
+        "betaY": 10,
+        "alphaX": 0,
+        "alphaY": 0,
+        "sigmaZ": 1,
+        "sigmaDelta": 0.001,
+        "poly": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "line": [
+        {
+          "id": 1,
+          "name": "Q1",
+          "type": "quad",
+          "s": 1,
+          "L": 0.15,
+          "G": 1.2
+        },
+        {
+          "id": 2,
+          "name": "Q2",
+          "type": "quad",
+          "s": 2,
+          "L": 0.15,
+          "G": -1.2
+        }
+      ],
+      "screen": 4,
+      "extension": 0.5
+    },
+    {
+      "id": "preset-7f7e6122-3c9c-4b7c-90a0-b3fd48ec2e37",
+      "name": "Energy_spread_3",
+      "beam": {
+        "energy": 44,
+        "n": 12000,
+        "seed": 7902026,
+        "emitX": 1,
+        "emitY": 1,
+        "betaX": 10,
+        "betaY": 10,
+        "alphaX": 0,
+        "alphaY": 0,
+        "sigmaZ": 1,
+        "sigmaDelta": 0,
+        "poly": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "line": [
+        {
+          "id": 1,
+          "name": "Q1",
+          "type": "quad",
+          "s": 1,
+          "L": 0.15,
+          "G": 1.2
+        },
+        {
+          "id": 2,
+          "name": "Q2",
+          "type": "quad",
+          "s": 2,
+          "L": 0.15,
+          "G": -1.2
+        }
+      ],
+      "screen": 4,
+      "extension": 0.5
+    }
+  ],
+  "defaultPresetId": "preset-1",
+  "activePresetId": "preset-7f7e6122-3c9c-4b7c-90a0-b3fd48ec2e37",
+  "revision": "3fd556d3-3213-492b-bda1-777340a53e2b",
+  "publishedAt": "2026-11-04T01:05:40.047Z"
 }
