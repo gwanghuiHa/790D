@@ -90,7 +90,7 @@
       "name": "Energy_spread_1",
       "beam": {
         "energy": 44,
-        "n": 12000,
+        "n": 50000,
         "seed": 7902026,
         "emitX": 1e-10,
         "emitY": 1e-10,
@@ -159,7 +159,7 @@
       "name": "Energy_spread_2",
       "beam": {
         "energy": 44,
-        "n": 12000,
+        "n": 50000,
         "seed": 7902026,
         "emitX": 1,
         "emitY": 1,
@@ -234,7 +234,7 @@
       "name": "Energy_spread_3",
       "beam": {
         "energy": 44,
-        "n": 12000,
+        "n": 50000,
         "seed": 7902026,
         "emitX": 1,
         "emitY": 1,
@@ -306,7 +306,7 @@
     }
   ],
   "defaultPresetId": "preset-1",
-  "activePresetId": "preset-f3a3acee-2561-48cf-a762-719282380efd",
-  "revision": "23b4d3d7-de56-4ba4-8d11-a5fbd0487b27",
-  "publishedAt": "2026-11-04T01:23:06.510Z"
+  "activePresetId": "preset-ecea14be-8724-43e4-99cd-b183fa9b9e71",
+  "revision": "bf9c149e-0d6c-4596-85de-22e04e39c24d",
+  "publishedAt": "2026-11-04T01:24:27.652Z"
 }
