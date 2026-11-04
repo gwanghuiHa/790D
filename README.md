@@ -6,18 +6,28 @@ Interactive, browser-based electron beam transport for **Experimental Beam Diagn
 
 Enable GitHub Pages once: **Settings → Pages → Build and deployment → Deploy from a branch → main → / (root) → Save**. Once GitHub finishes deployment, open <https://gwanghuiha.github.io/790D/>.
 
-For offline use, download the repository ZIP, extract it, and open `index.html` in a modern browser. Keep `index.html`, `app.js`, `physics.js`, `settings.js`, and `style.css` together. File-based offline mode uses the built-in beam; the hosted page reads the published `defaults.json`.
+For offline use, download the repository ZIP, extract it, and open `index.html` in a modern browser. Keep `index.html`, `app.js`, `physics.js`, `settings.js`, `presets.js`, and `style.css` together. File-based offline mode uses the built-in beam; the hosted page reads the published `defaults.json`.
 
-## Instructor workflow: one stable student URL
+## Lecture presets: prepare once, select during class
 
-Students always open **https://gwanghuiha.github.io/790D/**. The page loads `defaults.json` to obtain the shared beam, starting beamline, screen settings, and instructor passcode.
+Students open **https://gwanghuiha.github.io/790D/** and use the **Lecture preset** selector. Selecting a published preset immediately loads its fixed initial beam and the student's workspace for that preset. No password, token, or publishing is needed during class. Students can edit the lattice and screen; the initial beam parameters and phase-space plots remain hidden.
 
-1. Click **Instructor**. The initial passcode is **`790D`** (unless you have published a different one).
-2. Set the beam energy, normalized transverse RMS emittances and Twiss parameters, bunch length, uncorrelated momentum spread, particle count, and random seed. Click **Apply beam settings** to preview.
-3. Optionally set the longitudinal polynomial coefficients. With `u = z / (1 mm)`, the initial correlation is `delta = delta_uncorr + a1*u + a2*u^2 + a3*u^3 + a4*u^4`. Coefficients are fractional momentum deviation per mmⁿ. For example, `a1 = 0.01` gives a 1% momentum change at z = +1 mm.
-4. Adjust the starting lattice/screen and use **Change passcode** if desired.
-5. Click **Publish defaults**, then **Publish for all students**. This saves the beam, starting lattice, screen, and passcode to the GitHub repository. The latest beam input fields are included even if you have not pressed Apply. Element and screen edits must be applied first.
-6. Allow GitHub Pages a short time to deploy, then have students reload the same main URL. **Student URL** copies that short address; it never embeds the beam settings.
+The existing published beam/lattice becomes **Preset 1**, preserving its settings and instructor passcode.
+
+### Prepare the collection privately before class
+
+1. Unlock **Instructor** using your published passcode.
+2. To create a preset, configure the beam, lattice, and screen, enter a unique **Preset name**, then click **Create from current setup**. This copies the current setup into a new preset.
+3. Edit the selected preset and click **Save preset changes**. Use **Rename**, **Delete preset**, or **Set as opening default** as needed. At least one preset must remain; up to 50 are supported.
+4. Repeat for the presets you need. Each stores a beam, starting beamline, screen position, and plot extension. The instructor passcode applies to the entire collection.
+5. Click **Publish presets → Publish for all students** once. This publishes the entire collection, opening default, and passcode. Current beam-field changes are included for the selected preset. Apply lattice/screen edits first. Other presets contain the changes you previously saved.
+6. After GitHub Pages deploys, students reload once. All published presets are then available immediately at the same short URL. They select the preset you assign and work with their own lattice.
+
+Changing an existing preset or adding new presets for a future class requires publishing again. Switching among already published presets does not.
+
+**Save experiment** backs up the full prepared preset collection, active setup, opening default, and passcode hash. **Load experiment** restores that backup in Instructor mode. It does not publish anything. Older single-experiment files remain compatible and import as one preset. Saved beamline files remain independent of the beam/preset selection.
+
+Student beamline work is kept separately for each preset in browser session storage, so switching away and back restores their tuning. **Reset lattice** restores the selected preset's starting lattice and screen. A newly published revision starts fresh workspaces on reload; students can save their beamline JSON first if needed. Names appear in the student selector; choose names that identify the exercise without revealing its hidden beam values.
 
 ### GitHub authorization for publishing
 
@@ -29,9 +39,9 @@ Publishing updates only `defaults.json` on `main`, using its current GitHub blob
 
 ### Local work and older links
 
-- Beam/passcode edits are local until **Publish defaults** succeeds. Save an **instructor experiment** JSON for an independent backup.
-- If you had a setup saved in the previous version's browser session, **Restore previous local setup** appears after unlocking Instructor mode. Restore it, then publish it. The initial shared defaults otherwise match the original 44 MeV example.
-- Students can tune their own lattice without changing the published beam. Their session lattice is restored only while the published revision matches. After a newly published revision is deployed, reloading uses the new shared setup; save a beamline JSON first if you want to retain your lattice.
+- Preset/beam/passcode edits are local until **Publish presets** succeeds. Save an **instructor experiment** JSON for an independent backup.
+- If you had a setup saved in the previous version's browser session, **Restore previous local setup** appears after unlocking Instructor mode. Restore it, save the preset, then publish the collection. The initial shared defaults otherwise match the original 44 MeV example.
+- Students can tune their own lattice without changing the published beam. Their session lattices are restored only while the published revision matches. After a newly published revision is deployed, reloading uses the new shared setup; save a beamline JSON first if you want to retain your lattice.
 - Previously generated long experiment links still work as fixed snapshots. Distribute the plain main URL for shared updates.
 - If the published defaults cannot be loaded or validated online, the page displays an error instead of silently simulating a different beam. File-based offline use falls back to the built-in example; use the hosted page to obtain published defaults.
 
@@ -45,7 +55,7 @@ The instructor gate remains a classroom UI restriction, as requested. Beam gener
 - Move the virtual screen using its position field and **Apply screen settings**, the slider, or a click on the envelope. Set the desired distance beyond the screen independently.
 - View the RMS x/y envelope, x–y screen image, x/y profiles, RMS sizes, surviving macroparticle count, and transmission relative to the generated population.
 - **Save beamline** and **Load beamline** handle the lattice and screen, without exporting or altering the beam. Each browser works independently. Its lattice is retained for the current published revision; a new revision starts from the newly published setup on reload. Save JSON for durable work.
-- **Reset lattice** returns to the published starting lattice and screen, leaving the current beam unchanged.
+- **Reset lattice** returns to the selected preset’s starting lattice and screen, leaving the current beam unchanged.
 
 ## Physics and conventions
 
@@ -87,8 +97,12 @@ Browser checks exercised instructor unlock, slit creation/editing, screen measur
 - `defaults.json`: shared instructor setup loaded by the main student URL
 - `settings.js`: defaults loading, revision-aware session restoration, and authenticated GitHub publishing
 - `settings.test.js`: shared-defaults and publishing checks
+- `presets.js`: named presets, migration, default selection and isolated student workspaces
+- `presets.test.js`: preset collection and publishing checks
 - `physics.js`: independent 6D transport engine
 - `physics.test.js`: analytic and behavioral validation
+
+Run `node presets.test.js` to check preset migration, selection, workspace isolation, published defaults and collection round trips.
 
 Run `node settings.test.js` to check shared-defaults loading, revision changes, passcode preservation, GitHub publishing, conflicts, denied authorization, and error handling. These use mocked GitHub requests and no credentials.
 

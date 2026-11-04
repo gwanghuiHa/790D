@@ -1,0 +1,29 @@
+/* App-level preset workflow checks with a minimal DOM adapter (no browser/auth). */
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),crypto=require('node:crypto');
+const elements=new Map();
+function element(tag='div'){
+ const e={tag,value:'',textContent:'',hidden:false,disabled:false,style:{},dataset:{},children:[],classList:{toggle(){}},append(...nodes){this.children.push(...nodes);},replaceChildren(){this.children=[];},querySelectorAll(){return [];},addEventListener(){},showModal(){this.open=true;},close(){this.open=false;}};
+ Object.defineProperty(e,'id',{get(){return this._id;},set(v){this._id=v;elements.set(v,this);}});return e;
+}
+const document={getElementById(id){if(!elements.has(id)){const e=element();e.id=id;}return elements.get(id);},createElement:element,querySelectorAll(){return [];}};
+const session=new Map(),ctx=vm.createContext({console,document,Optics:require('./physics.js'),LecturePresets:require('./presets.js'),SharedSettings:require('./settings.js'),TextEncoder,TextDecoder,crypto:crypto.webcrypto,URL,Blob,Uint8Array,Float64Array,setTimeout,clearTimeout,window:{addEventListener(){}},sessionStorage:{getItem:k=>session.get(k)||null,setItem:(k,v)=>session.set(k,v)},location:{href:'https://gwanghuiha.github.io/790D/',protocol:'https:',hash:''},confirm:()=>true,prompt:()=>null});
+let source=fs.readFileSync(__dirname+'/app.js','utf8').replace(/\nboot\(\);\s*$/,'');
+vm.runInContext(source,ctx);vm.runInContext('draw=()=>{};drawInitial=()=>{};drawLattice=()=>{};',ctx);
+const execute=s=>vm.runInContext(s,ctx),value=id=>document.getElementById(id).value;
+let count=0;function check(name,fn){fn();count++;console.log('PASS '+name);}
+(async()=>{
+const defaults=JSON.parse(fs.readFileSync(__dirname+'/defaults.json','utf8'));
+ctx.fixture=defaults;
+execute("presetCatalog=LecturePresets.normalize(fixture);publishedSetup=fixture;passHash=fixture.passHash;defaultsRevision=fixture.revision;activePresetId=presetCatalog.defaultPresetId;activatePreset(activePresetId);setTeacher(true);");
+check('Instructor can create a second preset from edited beam fields',()=>{document.getElementById('presetName').value='Lecture exercise';document.getElementById('beam_energy').value='22';document.getElementById('createPreset').onclick();assert.equal(execute('presetCatalog.presets.length'),2);assert.equal(execute('beam.energy'),22);assert.equal(execute('presetCatalog.presets[0].beam.energy'),defaults.beam.energy);});
+check('Saving edits updates only the selected preset',()=>{document.getElementById('beam_sigmaZ').value='2.5';document.getElementById('savePreset').onclick();assert.equal(execute('presetCatalog.presets[1].beam.sigmaZ'),2.5);assert.equal(execute('presetCatalog.presets[0].beam.sigmaZ'),defaults.beam.sigmaZ);});
+check('Changing opening default does not require changing active beam values',()=>{document.getElementById('defaultPreset').onclick();assert.equal(execute('presetCatalog.defaultPresetId'),execute('activePresetId'));assert.equal(document.getElementById('defaultPreset').disabled,true);});
+check('Students switch presets immediately without unlocking or publishing',()=>{execute('setTeacher(false);');const first=execute('presetCatalog.presets[0].id');document.getElementById('presetSelect').value=first;document.getElementById('presetSelect').onchange();assert.equal(execute('teacher'),false);assert.equal(execute('beam.energy'),defaults.beam.energy);assert.equal(value('presetSelect'),first);});
+check('Switching away and back restores independent student lattice work',()=>{execute('line=[];screen=8;run();');const second=execute('presetCatalog.presets[1].id'),first=execute('presetCatalog.presets[0].id');document.getElementById('presetSelect').value=second;document.getElementById('presetSelect').onchange();assert.equal(execute('beam.energy'),22);assert.equal(execute('line.length'),defaults.line.length);document.getElementById('presetSelect').value=first;document.getElementById('presetSelect').onchange();assert.equal(execute('screen'),8);assert.equal(execute('line.length'),0);});
+check('Student session serialization contains no beam or passcode',()=>{const snapshot=JSON.parse(session.get('790D-workspace'));assert.ok(snapshot.presetWorkspaces);assert.ok(!JSON.stringify(snapshot).includes('passHash'));assert.ok(!JSON.stringify(snapshot).includes('energy'));});
+check('Reset lattice uses the selected preset baseline',()=>{document.getElementById('reset').onclick();assert.equal(execute('line.length'),defaults.line.length);assert.equal(execute('screen'),defaults.screen);});
+check('Publish dialog includes the entire collection without writing anything',()=>{execute('setTeacher(true);');document.getElementById('publishDefaults').onclick();assert.match(document.getElementById('publishSummary').textContent,/2 preset/);assert.equal(document.getElementById('publishDialog').open,true);document.getElementById('cancelPublish').onclick();});
+check('Deleting the default preset falls back to a surviving preset',()=>{const second=execute('presetCatalog.presets[1].id');document.getElementById('presetSelect').value=second;document.getElementById('presetSelect').onchange();document.getElementById('deletePreset').onclick();assert.equal(execute('presetCatalog.presets.length'),1);assert.equal(execute('activePresetId'),execute('presetCatalog.defaultPresetId'));assert.equal(document.getElementById('deletePreset').disabled,true);});
+console.log(`${count} app workflow checks passed.`);
+})().catch(e=>{console.error(e);process.exitCode=1;});
