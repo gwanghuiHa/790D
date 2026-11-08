@@ -439,10 +439,63 @@
       ],
       "screen": 2.3,
       "extension": 0.5
+    },
+    {
+      "id": "hw4-energy-spread",
+      "name": "HW4",
+      "beam": {
+        "energy": 44,
+        "n": 30000,
+        "seed": 79004,
+        "emitX": 50,
+        "emitY": 10,
+        "betaX": 3,
+        "betaY": 2,
+        "alphaX": 0,
+        "alphaY": 0,
+        "sigmaZ": 1,
+        "sigmaDelta": 0.002,
+        "poly": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "line": [
+        {
+          "id": 1,
+          "name": "Q1",
+          "type": "quad",
+          "s": 0.5,
+          "L": 0.15,
+          "G": 0
+        },
+        {
+          "id": 2,
+          "name": "Q2",
+          "type": "quad",
+          "s": 1.5,
+          "L": 0.15,
+          "G": 0
+        },
+        {
+          "id": 3,
+          "name": "B1",
+          "type": "dipole",
+          "s": 2.5,
+          "L": 0.3,
+          "angle": 10,
+          "edgeIn": 0,
+          "edgeOut": 0
+        }
+      ],
+      "screen": 3.8,
+      "extension": 0.3
     }
   ],
   "defaultPresetId": "preset-1",
   "activePresetId": "preset-abb333bb-d2fc-43a2-97e8-ea98954cdac7",
-  "revision": "1690a29b-6849-4a5b-b842-c3225ed7d769",
+  "revision": "hw4-1794113855653",
   "publishedAt": "2026-11-08T04:47:11.519Z"
 }
