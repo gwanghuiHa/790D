@@ -56,7 +56,18 @@ function generate(b){validateBeam(b);let seed=b.seed>>>0;function rand(){seed=(M
 function validateBeam(b){for(const key of ['energy','emitX','emitY','betaX','betaY','sigmaZ'])if(!Number.isFinite(b[key])||b[key]<=0)throw Error('Beam '+key+' must be positive.');if(!Number.isInteger(b.n)||b.n<100||b.n>50000)throw Error('Use 100–50,000 particles.');if(!Number.isInteger(b.seed)||b.seed<0||b.seed>4294967295)throw Error('Seed must be an integer from 0 to 4294967295.');for(const key of ['alphaX','alphaY','sigmaDelta'])if(!Number.isFinite(b[key]))throw Error('Invalid beam '+key);if(b.sigmaDelta<0)throw Error('Energy spread cannot be negative.');if(!Array.isArray(b.poly)||b.poly.length!==4||b.poly.some(x=>!Number.isFinite(x)))throw Error('Four finite polynomial coefficients are required.');profileSettings(b);}
 function validate(line,screen,extra){if(!Number.isFinite(screen)||screen<0||!Number.isFinite(extra)||extra<0||screen+extra>1000)throw Error('Screen and extension must be nonnegative; plot end must be ≤1000 m.');if(!Array.isArray(line)||line.length>100)throw Error('Use at most 100 elements.');const sorted=line.map(e=>({...e})).sort((a,b)=>a.s-b.s);let end=0;for(const e of sorted){if(!['drift','quad','dipole','tdc','slit'].includes(e.type))throw Error('Unknown element type.');if(!Number.isFinite(e.s)||e.s<0||e.s>1000)throw Error('Element entrance must be between 0 and 1000 m.');if(!Number.isFinite(e.L)||e.L<0||(e.type!=='slit'&&e.L<.0001))throw Error('Finite elements need a length ≥0.0001 m.');if(e.s<end-1e-10)throw Error('Elements overlap. Edit entrance positions or lengths.');if(e.type==='slit'){if(e.L!==0)throw Error('Slits are zero-length apertures.');if(!['x','y'].includes(e.axis)||!Number.isFinite(e.width)||e.width<=0||!Number.isFinite(e.center))throw Error('Slit needs a valid axis, positive width and finite center.');}
  if(e.type==='quad'&&!Number.isFinite(e.G))throw Error('Invalid quadrupole gradient.');if(e.type==='dipole'){if(![e.angle,e.edgeIn,e.edgeOut].every(Number.isFinite)||Math.abs(e.angle)>179||Math.abs(e.edgeIn)>=85||Math.abs(e.edgeOut)>=85)throw Error('Bend angle must be within ±179°; edges within ±85°.');}if(e.type==='tdc'&&(!['x','y'].includes(e.axis)||![e.kappa,e.frequency,e.phase].every(Number.isFinite)||e.frequency<=0))throw Error('Invalid TDC settings.');end=Math.max(end,e.s+e.L);}return sorted;}
-function transport(initial,line,energy,screen,extra){
+// First order in field error and particle coordinates about the fixed design orbit.
+// Positive field error bends toward negative x (opposite higher-momentum dispersion).
+function fieldErrorMap(L,theta,E,fraction){
+ const m=bend(L,theta,E),b=m.map(row=>-fraction*row[5]);
+ b[5]=0;b[4]+=fraction*L/reference(E).gamma**2;
+ return {m,b};
+}
+function transport(initial,line,energy,screen,extra,scan=null){
+ if(scan){const target=line.find(e=>e.id===scan.id);
+ if(!target||!['dipole','tdc'].includes(target.type)||!Number.isFinite(scan.offset))throw Error('Invalid calibration target or offset.');
+ if(target.type==='dipole'&&Math.abs(scan.offset)>.05+1e-12)throw Error('Dipole calibration is limited to ±5% field change (first-order model).');
+ }
  const sorted=validate(line,screen,extra),limit=screen+extra,points=[],slits=[];let p=initial,s=0,screenParticles=null;const tol=1e-10;
  function record(){const st=fastStats(p);points.push({s,...st});}
  function snap(){if(Math.abs(s-screen)<tol)screenParticles=p;}
@@ -65,10 +76,10 @@ function transport(initial,line,energy,screen,extra){
  if(e.type==='slit'){p=slit(p,e.axis,e.width*1e-3,e.center*1e-3);slits.push({s,n:p.length/6,name:e.name});record();snap();continue;}
  if(e.s>=limit-tol)break;
  if(e.type==='dipole'){p=map(p,edge((e.angle*Math.PI/180)/e.L,e.edgeIn*Math.PI/180));record();snap();}
- const target=Math.min(e.s+e.L,limit);travel(target,l=>{if(e.type==='drift')return drift(l,energy);if(e.type==='quad')return quad(l,e.G,energy);if(e.type==='dipole')return bend(l,e.angle*Math.PI/180*l/e.L,energy);return tdc(l,e.kappa*l/e.L,e.axis,e.frequency,e.phase,energy);});
+ const target=Math.min(e.s+e.L,limit);travel(target,l=>{if(e.type==='drift')return drift(l,energy);if(e.type==='quad')return quad(l,e.G,energy);if(e.type==='dipole')return scan&&scan.id===e.id?fieldErrorMap(l,e.angle*Math.PI/180*l/e.L,energy,scan.offset):bend(l,e.angle*Math.PI/180*l/e.L,energy);return tdc(l,e.kappa*l/e.L,e.axis,e.frequency,e.phase+(scan&&scan.id===e.id?scan.offset:0),energy);});
  if(e.type==='dipole'&&Math.abs(s-(e.s+e.L))<tol){p=map(p,edge(e.angle*Math.PI/180/e.L,e.edgeOut*Math.PI/180));record();snap();}
  if(s>=limit-tol)break;}
  if(s<limit-tol)travel(limit,l=>drift(l,energy));if(screenParticles===null&&Math.abs(screen)<tol)screenParticles=initial;if(screenParticles===null)throw Error('Screen could not be evaluated.');return {points,particles:screenParticles,stats:fastStats(screenParticles),slits,end:limit};
 }
-const api={DIPOLE_FRINGE,fringePsi,PROFILE_COORDS,profileSettings,eye,mul,reference,drift,quad,bend,edge,tdc,map,stats,fastStats,slit,generate,validateBeam,validate,transport};if(typeof module!=='undefined')module.exports=api;else root.Optics=api;
+const api={fieldErrorMap,DIPOLE_FRINGE,fringePsi,PROFILE_COORDS,profileSettings,eye,mul,reference,drift,quad,bend,edge,tdc,map,stats,fastStats,slit,generate,validateBeam,validate,transport};if(typeof module!=='undefined')module.exports=api;else root.Optics=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

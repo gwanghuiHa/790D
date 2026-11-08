@@ -159,3 +159,13 @@ Run `node presets.test.js` to check preset migration, selection, workspace isola
 Run `node settings.test.js` to check shared-defaults loading, revision changes, passcode preservation, GitHub publishing, conflicts, denied authorization, and error handling. These use mocked GitHub requests and no credentials.
 
 No packages or installation are needed to run the simulator.
+
+## Calibration at a fixed screen
+
+Open **Calibration · centroid shift** in Screen diagnostics. Select an upstream dipole or TDC and click **Set central setting**. Scan **B/B₀ [%]** (95–105%) for a dipole or **TDC phase [deg]** for a cavity. Centroids and shifts are in mm, relative to the captured central beam at the same screen. End calibration to return to the central setup. No instructor unlock is needed.
+
+The dipole scan keeps nominal sector/edge matrices and the reference geometry fixed. To first order in fractional field change η, its body adds the affine offsets `−η (R16, R26, 0, 0, R56_geometric, 0)`. The velocity-slip part of R56 is excluded: varying B does not change beam velocity. This is the standard small-error orbit response, with the same sign as a momentum error −η; products of field error with particle deviations, field-dependent focusing and nonlinear geometry are outside this first-order model. Nominal fringe kicks act on the displaced orbit. A zero central bend cannot use a relative field scan. The nominal B₀ shown is inferred from the hidden reference rigidity and design bend.
+
+TDC scans use the existing affine thick-cavity map at the selected phase, keeping κ and frequency unchanged. At zero crossing, a cavity followed by drift d has centroid slope `(d+L/2) κ/kRF` per radian in its deflecting plane.
+
+References and scan values are temporary measurement state: they do not modify saved beamlines, experiments, presets, defaults or passcodes. Editing the setup or moving the screen clears the reference. RMS sizes remain centered about the current surviving centroid. Run `node calibration.test.js` for analytic field/phase response checks.
