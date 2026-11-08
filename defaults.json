@@ -370,10 +370,85 @@
       ],
       "screen": 12,
       "extension": 0.5
+    },
+    {
+      "id": "preset-abb333bb-d2fc-43a2-97e8-ea98954cdac7",
+      "name": "Dispersion",
+      "beam": {
+        "energy": 44,
+        "n": 50000,
+        "seed": 7902026,
+        "emitX": 1,
+        "emitY": 1,
+        "betaX": 100,
+        "betaY": 100,
+        "alphaX": 0,
+        "alphaY": 0,
+        "sigmaZ": 1,
+        "sigmaDelta": 0.001,
+        "poly": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "profiles": {
+          "x": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "xp": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "y": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "yp": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "z": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "delta": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          }
+        }
+      },
+      "line": [
+        {
+          "id": 1,
+          "name": "Q1",
+          "type": "quad",
+          "s": 1,
+          "L": 0.15,
+          "G": 1.2
+        },
+        {
+          "id": 2,
+          "name": "Q2",
+          "type": "quad",
+          "s": 2,
+          "L": 0.15,
+          "G": -1.2
+        }
+      ],
+      "screen": 4,
+      "extension": 0.5
     }
   ],
   "defaultPresetId": "preset-1",
-  "activePresetId": "preset-340202ab-29ba-4b70-9a4d-747c39d7e643",
-  "revision": "cccacc13-8b10-4f75-ba31-808c7615f7d0",
-  "publishedAt": "2026-11-04T04:14:45.117Z"
+  "activePresetId": "preset-abb333bb-d2fc-43a2-97e8-ea98954cdac7",
+  "revision": "d05053f0-5ae4-4b65-a82d-8673cd7c7f5c",
+  "publishedAt": "2026-11-08T03:22:34.672Z"
 }
