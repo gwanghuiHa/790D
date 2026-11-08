@@ -428,27 +428,21 @@
       "line": [
         {
           "id": 1,
-          "name": "Q1",
-          "type": "quad",
+          "name": "B1",
+          "type": "dipole",
           "s": 1,
-          "L": 0.15,
-          "G": 1.2
-        },
-        {
-          "id": 2,
-          "name": "Q2",
-          "type": "quad",
-          "s": 2,
-          "L": 0.15,
-          "G": -1.2
+          "L": 0.3,
+          "angle": 20,
+          "edgeIn": 0,
+          "edgeOut": 0
         }
       ],
-      "screen": 4,
+      "screen": 2.3,
       "extension": 0.5
     }
   ],
   "defaultPresetId": "preset-1",
   "activePresetId": "preset-abb333bb-d2fc-43a2-97e8-ea98954cdac7",
-  "revision": "d05053f0-5ae4-4b65-a82d-8673cd7c7f5c",
-  "publishedAt": "2026-11-08T03:22:34.672Z"
+  "revision": "1690a29b-6849-4a5b-b842-c3225ed7d769",
+  "publishedAt": "2026-11-08T04:47:11.519Z"
 }
