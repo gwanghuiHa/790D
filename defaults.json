@@ -553,7 +553,7 @@
           "name": "RF1",
           "type": "tdc",
           "s": 1,
-          "L": 0.2,
+          "L": 0.3,
           "kappa": 2,
           "frequency": 1.3,
           "phase": 0,
@@ -566,6 +566,6 @@
   ],
   "defaultPresetId": "preset-1",
   "activePresetId": "preset-dfc411e4-5bfa-4810-9edb-551e85d12186",
-  "revision": "093bc393-8c7a-4c18-89c7-cf1e2864e962",
-  "publishedAt": "2026-11-09T23:12:02.974Z"
+  "revision": "6f08c3e5-009d-4b85-909e-38cfb77ac9a5",
+  "publishedAt": "2026-11-09T23:16:00.654Z"
 }
