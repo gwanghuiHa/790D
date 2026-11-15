@@ -639,15 +639,15 @@
       "name": "LPS1",
       "beam": {
         "energy": 44,
-        "n": 12000,
+        "n": 50000,
         "seed": 7902026,
         "emitX": 1,
         "emitY": 1,
-        "betaX": 200,
-        "betaY": 200,
+        "betaX": 800,
+        "betaY": 800,
         "alphaX": 0,
         "alphaY": 0,
-        "sigmaZ": 1,
+        "sigmaZ": 2.021,
         "sigmaDelta": 0.0001,
         "poly": [
           0,
@@ -677,7 +677,7 @@
             "separation": 1
           },
           "z": {
-            "shape": "gaussian",
+            "shape": "uniform",
             "count": 1,
             "separation": 1
           },
@@ -686,32 +686,54 @@
             "count": 1,
             "separation": 1
           }
-        }
+        },
+        "profileConvention": "component"
       },
       "line": [
         {
           "id": 1,
           "name": "Q1",
           "type": "quad",
-          "s": 1,
-          "L": 0.15,
-          "G": 1.2
+          "s": 0.5,
+          "L": 0.05,
+          "G": 0
         },
         {
           "id": 2,
           "name": "Q2",
           "type": "quad",
-          "s": 2,
-          "L": 0.15,
-          "G": -1.2
+          "s": 1,
+          "L": 0.05,
+          "G": 0
+        },
+        {
+          "id": 3,
+          "type": "tdc",
+          "name": "RF3",
+          "s": 1.4,
+          "L": 0.3,
+          "axis": "y",
+          "kappa": 2,
+          "frequency": 1.3,
+          "phase": 0
+        },
+        {
+          "id": 4,
+          "type": "dipole",
+          "name": "B4",
+          "s": 2.05,
+          "L": 0.3,
+          "angle": 20,
+          "edgeIn": 0,
+          "edgeOut": 20
         }
       ],
-      "screen": 4,
+      "screen": 5.35,
       "extension": 0.5
     }
   ],
   "defaultPresetId": "preset-1",
   "activePresetId": "preset-e9a21f11-a866-4607-89b2-fa8aa2bc33f4",
-  "revision": "0195f3a4-dc99-4941-ab4f-351d3fb463d5",
-  "publishedAt": "2026-11-15T22:43:40.067Z"
+  "revision": "34b7c6f9-3267-4174-be7a-f358d7f8b756",
+  "publishedAt": "2026-11-15T23:13:41.438Z"
 }
