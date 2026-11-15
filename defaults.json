@@ -633,10 +633,85 @@
       ],
       "screen": 2.3,
       "extension": 0.5
+    },
+    {
+      "id": "preset-e9a21f11-a866-4607-89b2-fa8aa2bc33f4",
+      "name": "LPS1",
+      "beam": {
+        "energy": 44,
+        "n": 12000,
+        "seed": 7902026,
+        "emitX": 1,
+        "emitY": 1,
+        "betaX": 200,
+        "betaY": 200,
+        "alphaX": 0,
+        "alphaY": 0,
+        "sigmaZ": 1,
+        "sigmaDelta": 0.0001,
+        "poly": [
+          0,
+          -0.0008,
+          0,
+          0.00008
+        ],
+        "profiles": {
+          "x": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "xp": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "y": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "yp": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "z": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "delta": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          }
+        }
+      },
+      "line": [
+        {
+          "id": 1,
+          "name": "Q1",
+          "type": "quad",
+          "s": 1,
+          "L": 0.15,
+          "G": 1.2
+        },
+        {
+          "id": 2,
+          "name": "Q2",
+          "type": "quad",
+          "s": 2,
+          "L": 0.15,
+          "G": -1.2
+        }
+      ],
+      "screen": 4,
+      "extension": 0.5
     }
   ],
   "defaultPresetId": "preset-1",
-  "activePresetId": "preset-08fe470e-c3c4-4a0e-bf06-9877938498e5",
-  "revision": "1e09d101-c8d7-442d-a7d9-2d5148cd873a",
-  "publishedAt": "2026-11-09T23:34:20.404Z"
+  "activePresetId": "preset-e9a21f11-a866-4607-89b2-fa8aa2bc33f4",
+  "revision": "0195f3a4-dc99-4941-ab4f-351d3fb463d5",
+  "publishedAt": "2026-11-15T22:43:40.067Z"
 }
