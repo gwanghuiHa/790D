@@ -739,7 +739,7 @@
         "n": 50000,
         "seed": 7902026,
         "emitX": 1,
-        "emitY": 5,
+        "emitY": 10,
         "betaX": 1770.23,
         "betaY": 354.05,
         "alphaX": -177.023,
@@ -747,7 +747,7 @@
         "sigmaZ": 0.01,
         "sigmaDelta": 0.0001,
         "poly": [
-          0.1,
+          0,
           0,
           0,
           0
@@ -810,6 +810,6 @@
   ],
   "defaultPresetId": "preset-1",
   "activePresetId": "preset-cb3c1266-41f1-4426-a42a-6bfb577bf198",
-  "revision": "44999664-3e08-436f-be11-21926f31397b",
-  "publishedAt": "2026-11-18T05:38:52.462Z"
+  "revision": "057d9a5a-c937-42aa-932f-a92e8c6e7e40",
+  "publishedAt": "2026-11-18T05:48:47.765Z"
 }
