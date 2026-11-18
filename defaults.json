@@ -730,10 +730,86 @@
       ],
       "screen": 5.35,
       "extension": 0.5
+    },
+    {
+      "id": "preset-cb3c1266-41f1-4426-a42a-6bfb577bf198",
+      "name": "Final",
+      "beam": {
+        "energy": 100,
+        "n": 50000,
+        "seed": 7902026,
+        "emitX": 1,
+        "emitY": 5,
+        "betaX": 1770.23,
+        "betaY": 354.05,
+        "alphaX": -177.023,
+        "alphaY": 35.405,
+        "sigmaZ": 0.01,
+        "sigmaDelta": 0.0001,
+        "poly": [
+          0.1,
+          0,
+          0,
+          0
+        ],
+        "profiles": {
+          "x": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "xp": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "y": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "yp": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          },
+          "z": {
+            "shape": "gaussian",
+            "count": 5,
+            "separation": 6
+          },
+          "delta": {
+            "shape": "gaussian",
+            "count": 1,
+            "separation": 1
+          }
+        },
+        "profileConvention": "component"
+      },
+      "line": [
+        {
+          "id": 1,
+          "name": "Q1",
+          "type": "quad",
+          "s": 1,
+          "L": 0.15,
+          "G": 1.2
+        },
+        {
+          "id": 2,
+          "name": "Q2",
+          "type": "quad",
+          "s": 2,
+          "L": 0.15,
+          "G": -1.2
+        }
+      ],
+      "screen": 4,
+      "extension": 0.5
     }
   ],
   "defaultPresetId": "preset-1",
-  "activePresetId": "preset-e9a21f11-a866-4607-89b2-fa8aa2bc33f4",
-  "revision": "34b7c6f9-3267-4174-be7a-f358d7f8b756",
-  "publishedAt": "2026-11-15T23:13:41.438Z"
+  "activePresetId": "preset-cb3c1266-41f1-4426-a42a-6bfb577bf198",
+  "revision": "44999664-3e08-436f-be11-21926f31397b",
+  "publishedAt": "2026-11-18T05:38:52.462Z"
 }
