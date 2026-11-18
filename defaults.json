@@ -784,7 +784,9 @@
             "separation": 1
           }
         },
-        "profileConvention": "component"
+        "profileConvention": "component",
+        "quadGradientErrorPct": 2,
+        "tdcKappaErrorPct": 210
       },
       "line": [
         {
@@ -810,6 +812,6 @@
   ],
   "defaultPresetId": "preset-1",
   "activePresetId": "preset-cb3c1266-41f1-4426-a42a-6bfb577bf198",
-  "revision": "acd39944-e302-4d16-96f8-824fc0ffd5c1",
-  "publishedAt": "2026-11-18T06:33:22.449Z"
+  "revision": "d3c0a0e8-6e9b-420c-a295-a39bccf1772a",
+  "publishedAt": "2026-11-18T07:08:15.900Z"
 }
