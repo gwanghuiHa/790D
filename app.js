@@ -75,39 +75,44 @@ function imageRange(p){const manual=Number($('imageRange').value);if(manual>0)re
 function density(id,p,ix,iy,rx,ry,sx=1e3,sy=1e3,xlabel='x [mm]',ylabel='y [mm]'){const a=axes(id,-rx,rx,-ry,ry,xlabel,ylabel),{ctx,px,py}=a,n=Number($('imageBins').value)||256,hist=ScreenDiagnostics.histogram2D(p,ix,iy,rx,ry,n,n,sx,sy);if(hist.peak){const raster=document.createElement('canvas');raster.width=n;raster.height=n;const rctx=raster.getContext('2d'),pixels=rctx.createImageData(n,n);for(let y=0;y<n;y++)for(let x=0;x<n;x++){const count=hist.bins[y*n+x];if(!count)continue;const t=Math.pow(count/hist.peak,.45),offset=((n-1-y)*n+x)*4;pixels.data[offset]=Math.round(224-206*t);pixels.data[offset+1]=Math.round(242-119*t);pixels.data[offset+2]=Math.round(245-86*t);pixels.data[offset+3]=255;}rctx.putImageData(pixels,0,0);clipped(a,()=>{ctx.imageSmoothingEnabled=false;ctx.drawImage(raster,px(-rx),py(ry),px(rx)-px(-rx),py(-ry)-py(ry));});}if(!p.length){ctx.textAlign='center';ctx.fillStyle='#728694';ctx.fillText('No transmitted particles',a.w/2,a.h/2);}if(id==='image')drawBunchBoundaries(a,null,true);return hist;}
 function profile(id,p,coordinate,range,label,color){const n=$('profileBins').value==='auto'||!$('profileBins').value?ScreenDiagnostics.autoBins(p,coordinate,range):Number($('profileBins').value),hist=ScreenDiagnostics.histogram1D(p,coordinate,range,n),max=Math.max(1,...hist.bins),a=axes(id,-range,range,0,max*1.15,label,'Particles / bin');clipped(a,()=>{a.ctx.fillStyle=color+'55';for(let i=0;i<n;i++)a.ctx.fillRect(a.px(-range+i*hist.dx),a.py(hist.bins[i]),a.px(hist.dx)-a.px(0),a.py(0)-a.py(hist.bins[i]));const xs=[],ys=[];for(let i=0;i<n;i++){xs.push(-range+i*hist.dx,-range+(i+1)*hist.dx);ys.push(hist.bins[i],hist.bins[i]);}linePlot(a,xs,ys,color);});drawBunchBoundaries(a,coordinate);return {n,dx:hist.dx};}
 function drawInitial(){if(!teacher||!initial)return;for(const [id,i,j,ux,uy,xl,yl] of [['initialX',0,1,1e3,1e3,'x [mm]','x′ [mrad]'],['initialY',2,3,1e3,1e3,'y [mm]','y′ [mrad]'],['initialZ',4,5,1e3,100,'z [mm]','δ [%]']]){let rx=.001,ry=.001;for(let k=0;k<initial.length;k+=6){rx=Math.max(rx,Math.abs(initial[k+i])*ux);ry=Math.max(ry,Math.abs(initial[k+j])*uy);}density(id,initial,i,j,rx*1.05,ry*1.05,ux,uy,xl,yl);}}
-function bunchWindow(){
- const lower=$('bunchLower').value, upper=$('bunchUpper').value;
+function bunchWindow(axis){
+ const prefix=axis===0?'xBunch':'yBunch';
+ const lower=$(prefix+'Lower').value, upper=$(prefix+'Upper').value;
  const lo=Number(lower), hi=Number(upper);
  if(lower===''||upper===''||!Number.isFinite(lo)||!Number.isFinite(hi)||lo>=hi)return null;
- return {axis:$('bunchAxis').value==='x'?0:2,lo,hi};
+ return {axis,lo,hi};
 }
 function drawBunchBoundaries(plot,coordinate,isImage=false){
- const window=bunchWindow();
- if(!$('bunchPanel').open||!window||(!isImage&&window.axis!==coordinate))return;
+ if(!$('bunchPanel').open)return;
+ const windows=(isImage?[0,2]:[coordinate]).map(bunchWindow).filter(Boolean);
  const {ctx,m,w,h,px,py}=plot;
  clipped(plot,()=>{
-  ctx.strokeStyle='#512b81';
+
   ctx.lineWidth=2;
   ctx.setLineDash([6,4]);
-  for(const bound of [window.lo,window.hi]){
+  for(const window of windows){
+   ctx.strokeStyle=window.axis===0?'#1671c5':'#a4491e';
+   for(const bound of [window.lo,window.hi]){
    ctx.beginPath();
    if(isImage&&window.axis===2){
     ctx.moveTo(m.l,py(bound));ctx.lineTo(w-m.r,py(bound));
    }else{
     ctx.moveTo(px(bound),m.t);ctx.lineTo(px(bound),h-m.b);
    }
-   ctx.stroke();
+    ctx.stroke();
+   }
   }
  });
 }
-function drawBunchStats(){
- const output=$('bunchStats'), window=bunchWindow();
- for(const id of ['bunchRmsX','bunchRmsY','bunchMeanX','bunchMeanY','bunchCount'])$(id).textContent='—';
+function drawWindowStats(axis){
+ const prefix=axis===0?'xBunch':'yBunch';
+ const output=$(prefix+'Stats'), window=bunchWindow(axis);
+ for(const id of ['RmsX','RmsY','MeanX','MeanY','Count'])$(prefix+id).textContent='—';
  if(!result){output.textContent='No screen measurement available.';return;}
  if(!window){
   output.textContent='Enter two bounds in increasing order.';return;
  }
- const {axis,lo,hi}=window;
+ const {lo,hi}=window;
  const particles=result.particles, mean=[0,0], squared=[0,0];
  let count=0;
  for(let i=0;i<particles.length;i+=6){
@@ -123,14 +128,18 @@ function drawBunchStats(){
  if(!count){output.textContent='No particles within the window.';return;}
  const rms=squared.map(sum=>count>1?Math.sqrt(Math.max(0,sum/count)):null);
  const formatRms=value=>value===null?'—':value<1?fmt(value*1000,3)+' µm':fmt(value,4)+' mm';
- $('bunchRmsX').textContent=formatRms(rms[0]);
- $('bunchRmsY').textContent=formatRms(rms[1]);
- $('bunchMeanX').textContent=fmt(mean[0],5)+' mm';
- $('bunchMeanY').textContent=fmt(mean[1],5)+' mm';
- $('bunchCount').textContent=count.toLocaleString();
+ $(prefix+'RmsX').textContent=formatRms(rms[0]);
+ $(prefix+'RmsY').textContent=formatRms(rms[1]);
+ $(prefix+'MeanX').textContent=fmt(mean[0],5)+' mm';
+ $(prefix+'MeanY').textContent=fmt(mean[1],5)+' mm';
+ $(prefix+'Count').textContent=count.toLocaleString();
  output.textContent=count===1?'At least two particles are needed to estimate RMS.':'';
 }
-for(const id of ['bunchAxis','bunchLower','bunchUpper'])$(id).oninput=()=>draw();
+function drawBunchStats(){
+ drawWindowStats(0);
+ drawWindowStats(2);
+}
+for(const id of ['xBunchLower','xBunchUpper','yBunchLower','yBunchUpper'])$(id).oninput=()=>draw();
 $('bunchPanel').ontoggle=()=>draw();
 function draw(){if(!result)return;drawBunchStats();drawEnvelope();const p=result.particles,r=imageRange(p),match=$('profileRange').value==='image',rx=match?r:ScreenDiagnostics.extent(p,0),ry=match?r:ScreenDiagnostics.extent(p,2);const img=density('image',p,0,2,r,r),hx=profile('profileX',p,0,rx,'x [mm]','#1671c5'),hy=profile('profileY',p,2,ry,'y [mm]','#d06d36');const st=result.stats;$('sx').textContent=st.sx===null?'—':fmt(st.sx*1e3,4)+' mm';$('sy').textContent=st.sy===null?'—':fmt(st.sy*1e3,4)+' mm';$('count').textContent=st.n.toLocaleString();$('transmission').textContent=fmt(100*st.n/beam.n,2)+'%';$('imageNote').textContent=st.n?`${img.included.toLocaleString()} particles within image bounds; RMS sizes and transmission use all ${st.n.toLocaleString()} particles at the screen. Image bins: ${$('imageBins').value||256} × ${$('imageBins').value||256} (${fmt(img.dx,4)} mm/bin). Profiles: x ${hx.n} bins (${fmt(hx.dx,4)} mm/bin), y ${hy.n} bins (${fmt(hy.dx,4)} mm/bin). ${match?'Profiles match image range.':'Profiles use independent auto ranges.'} Centroid: x = ${fmt(st.mx*1e3)} mm, y = ${fmt(st.my*1e3)} mm.`:'No particles reach this screen. Open or reposition the upstream slit.';drawInitial();}
 $('applyElement').onclick=()=>{const old=line.find(e=>e.id===selected);if(!old)return;const e={...old};$('elementFields').querySelectorAll('input,select').forEach(input=>{const key=input.id.slice(3);e[key]=['name','axis'].includes(key)?input.value:Number(input.value);});const candidate=line.map(x=>x.id===e.id?e:x);try{P.validate(candidate,screen,extension);line=candidate;renderList();run();}catch(err){status(err.message,true);}};
