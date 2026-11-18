@@ -748,8 +748,8 @@
         "sigmaDelta": 0.0001,
         "poly": [
           0,
-          0,
-          0,
+          0.02,
+          0.12,
           0
         ],
         "profiles": {
@@ -810,6 +810,6 @@
   ],
   "defaultPresetId": "preset-1",
   "activePresetId": "preset-cb3c1266-41f1-4426-a42a-6bfb577bf198",
-  "revision": "057d9a5a-c937-42aa-932f-a92e8c6e7e40",
-  "publishedAt": "2026-11-18T05:48:47.765Z"
+  "revision": "acd39944-e302-4d16-96f8-824fc0ffd5c1",
+  "publishedAt": "2026-11-18T06:33:22.449Z"
 }
