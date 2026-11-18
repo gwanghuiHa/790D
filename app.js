@@ -72,17 +72,42 @@ function linePlot(a,xs,ys,color){const {ctx,px,py}=a;ctx.strokeStyle=color;ctx.l
 function drawEnvelope(){const points=result.points;const scale=$('envelopeScale').value;const max=scale==='auto'?Math.max(.01,...points.map(p=>Math.max(p.sx||0,p.sy||0)*1e3))*1.18:Number(scale);const a=axes('envelope',0,Math.max(result.end,.001),0,max,'s along reference orbit [m]','Centered RMS size [mm]');plotMap=a;clipped(a,()=>{linePlot(a,points.map(p=>p.s),points.map(p=>p.sx===null?null:p.sx*1e3),'#1671c5');linePlot(a,points.map(p=>p.s),points.map(p=>p.sy===null?null:p.sy*1e3),'#d06d36');const {ctx,px,py}=a;for(const loss of result.slits){ctx.strokeStyle='#a9c5b9';ctx.setLineDash([2,4]);ctx.beginPath();ctx.moveTo(px(loss.s),py(0));ctx.lineTo(px(loss.s),py(max));ctx.stroke();}ctx.setLineDash([5,4]);ctx.strokeStyle='#087f8c';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(px(screen),py(0));ctx.lineTo(px(screen),py(max));ctx.stroke();ctx.setLineDash([]);});drawLattice();}
 function drawLattice(){if(!result)return;const {ctx,w,h}=canvas('lattice'),m={l:55,r:16},px=s=>m.l+s/Math.max(result.end,.001)*(w-m.l-m.r);latticeHits=[];ctx.fillStyle='#f6f9fa';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#a7b8c3';ctx.beginPath();ctx.moveTo(m.l,34);ctx.lineTo(w-m.r,34);ctx.stroke();ctx.save();ctx.beginPath();ctx.rect(m.l,0,w-m.l-m.r,h);ctx.clip();for(const e of [...line].sort((a,b)=>a.s-b.s)){if(e.s>result.end)continue;const x=px(e.s),width=Math.max(7,px(e.s+e.L)-x);ctx.fillStyle=colors[e.type];ctx.fillRect(x,25,width,18);if(e.id===selected){ctx.strokeStyle='#112c3a';ctx.lineWidth=2;ctx.strokeRect(x-2,23,width+4,22);}ctx.fillStyle='#496574';ctx.font='10px system-ui';ctx.textAlign='center';ctx.fillText(e.name.slice(0,15),x+width/2,(e.id%2)?16:59);latticeHits.push({x:x-4,w:width+8,id:e.id});}ctx.strokeStyle='#087f8c';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(px(screen),4);ctx.lineTo(px(screen),63);ctx.stroke();ctx.restore();}
 function imageRange(p){const manual=Number($('imageRange').value);if(manual>0)return manual;return Math.max(ScreenDiagnostics.extent(p,0),ScreenDiagnostics.extent(p,2));}
-function density(id,p,ix,iy,rx,ry,sx=1e3,sy=1e3,xlabel='x [mm]',ylabel='y [mm]'){const a=axes(id,-rx,rx,-ry,ry,xlabel,ylabel),{ctx,px,py}=a,n=Number($('imageBins').value)||256,hist=ScreenDiagnostics.histogram2D(p,ix,iy,rx,ry,n,n,sx,sy);if(hist.peak){const raster=document.createElement('canvas');raster.width=n;raster.height=n;const rctx=raster.getContext('2d'),pixels=rctx.createImageData(n,n);for(let y=0;y<n;y++)for(let x=0;x<n;x++){const count=hist.bins[y*n+x];if(!count)continue;const t=Math.pow(count/hist.peak,.45),offset=((n-1-y)*n+x)*4;pixels.data[offset]=Math.round(224-206*t);pixels.data[offset+1]=Math.round(242-119*t);pixels.data[offset+2]=Math.round(245-86*t);pixels.data[offset+3]=255;}rctx.putImageData(pixels,0,0);clipped(a,()=>{ctx.imageSmoothingEnabled=false;ctx.drawImage(raster,px(-rx),py(ry),px(rx)-px(-rx),py(-ry)-py(ry));});}if(!p.length){ctx.textAlign='center';ctx.fillStyle='#728694';ctx.fillText('No transmitted particles',a.w/2,a.h/2);}return hist;}
-function profile(id,p,coordinate,range,label,color){const n=$('profileBins').value==='auto'||!$('profileBins').value?ScreenDiagnostics.autoBins(p,coordinate,range):Number($('profileBins').value),hist=ScreenDiagnostics.histogram1D(p,coordinate,range,n),max=Math.max(1,...hist.bins),a=axes(id,-range,range,0,max*1.15,label,'Particles / bin');clipped(a,()=>{a.ctx.fillStyle=color+'55';for(let i=0;i<n;i++)a.ctx.fillRect(a.px(-range+i*hist.dx),a.py(hist.bins[i]),a.px(hist.dx)-a.px(0),a.py(0)-a.py(hist.bins[i]));const xs=[],ys=[];for(let i=0;i<n;i++){xs.push(-range+i*hist.dx,-range+(i+1)*hist.dx);ys.push(hist.bins[i],hist.bins[i]);}linePlot(a,xs,ys,color);});return {n,dx:hist.dx};}
+function density(id,p,ix,iy,rx,ry,sx=1e3,sy=1e3,xlabel='x [mm]',ylabel='y [mm]'){const a=axes(id,-rx,rx,-ry,ry,xlabel,ylabel),{ctx,px,py}=a,n=Number($('imageBins').value)||256,hist=ScreenDiagnostics.histogram2D(p,ix,iy,rx,ry,n,n,sx,sy);if(hist.peak){const raster=document.createElement('canvas');raster.width=n;raster.height=n;const rctx=raster.getContext('2d'),pixels=rctx.createImageData(n,n);for(let y=0;y<n;y++)for(let x=0;x<n;x++){const count=hist.bins[y*n+x];if(!count)continue;const t=Math.pow(count/hist.peak,.45),offset=((n-1-y)*n+x)*4;pixels.data[offset]=Math.round(224-206*t);pixels.data[offset+1]=Math.round(242-119*t);pixels.data[offset+2]=Math.round(245-86*t);pixels.data[offset+3]=255;}rctx.putImageData(pixels,0,0);clipped(a,()=>{ctx.imageSmoothingEnabled=false;ctx.drawImage(raster,px(-rx),py(ry),px(rx)-px(-rx),py(-ry)-py(ry));});}if(!p.length){ctx.textAlign='center';ctx.fillStyle='#728694';ctx.fillText('No transmitted particles',a.w/2,a.h/2);}if(id==='image')drawBunchBoundaries(a,null,true);return hist;}
+function profile(id,p,coordinate,range,label,color){const n=$('profileBins').value==='auto'||!$('profileBins').value?ScreenDiagnostics.autoBins(p,coordinate,range):Number($('profileBins').value),hist=ScreenDiagnostics.histogram1D(p,coordinate,range,n),max=Math.max(1,...hist.bins),a=axes(id,-range,range,0,max*1.15,label,'Particles / bin');clipped(a,()=>{a.ctx.fillStyle=color+'55';for(let i=0;i<n;i++)a.ctx.fillRect(a.px(-range+i*hist.dx),a.py(hist.bins[i]),a.px(hist.dx)-a.px(0),a.py(0)-a.py(hist.bins[i]));const xs=[],ys=[];for(let i=0;i<n;i++){xs.push(-range+i*hist.dx,-range+(i+1)*hist.dx);ys.push(hist.bins[i],hist.bins[i]);}linePlot(a,xs,ys,color);});drawBunchBoundaries(a,coordinate);return {n,dx:hist.dx};}
 function drawInitial(){if(!teacher||!initial)return;for(const [id,i,j,ux,uy,xl,yl] of [['initialX',0,1,1e3,1e3,'x [mm]','x′ [mrad]'],['initialY',2,3,1e3,1e3,'y [mm]','y′ [mrad]'],['initialZ',4,5,1e3,100,'z [mm]','δ [%]']]){let rx=.001,ry=.001;for(let k=0;k<initial.length;k+=6){rx=Math.max(rx,Math.abs(initial[k+i])*ux);ry=Math.max(ry,Math.abs(initial[k+j])*uy);}density(id,initial,i,j,rx*1.05,ry*1.05,ux,uy,xl,yl);}}
-function drawBunchStats(){
- const output=$('bunchStats'), lower=$('bunchLower').value, upper=$('bunchUpper').value;
+function bunchWindow(){
+ const lower=$('bunchLower').value, upper=$('bunchUpper').value;
  const lo=Number(lower), hi=Number(upper);
+ if(lower===''||upper===''||!Number.isFinite(lo)||!Number.isFinite(hi)||lo>=hi)return null;
+ return {axis:$('bunchAxis').value==='x'?0:2,lo,hi};
+}
+function drawBunchBoundaries(plot,coordinate,isImage=false){
+ const window=bunchWindow();
+ if(!$('bunchPanel').open||!window||(!isImage&&window.axis!==coordinate))return;
+ const {ctx,m,w,h,px,py}=plot;
+ clipped(plot,()=>{
+  ctx.strokeStyle='#512b81';
+  ctx.lineWidth=2;
+  ctx.setLineDash([6,4]);
+  for(const bound of [window.lo,window.hi]){
+   ctx.beginPath();
+   if(isImage&&window.axis===2){
+    ctx.moveTo(m.l,py(bound));ctx.lineTo(w-m.r,py(bound));
+   }else{
+    ctx.moveTo(px(bound),m.t);ctx.lineTo(px(bound),h-m.b);
+   }
+   ctx.stroke();
+  }
+ });
+}
+function drawBunchStats(){
+ const output=$('bunchStats'), window=bunchWindow();
+ for(const id of ['bunchRmsX','bunchRmsY','bunchMeanX','bunchMeanY','bunchCount'])$(id).textContent='—';
  if(!result){output.textContent='No screen measurement available.';return;}
- if(lower===''||upper===''||!Number.isFinite(lo)||!Number.isFinite(hi)||lo>=hi){
+ if(!window){
   output.textContent='Enter two bounds in increasing order.';return;
  }
- const axis=$('bunchAxis').value==='x'?0:2;
+ const {axis,lo,hi}=window;
  const particles=result.particles, mean=[0,0], squared=[0,0];
  let count=0;
  for(let i=0;i<particles.length;i+=6){
@@ -96,10 +121,17 @@ function drawBunchStats(){
   }
  }
  if(!count){output.textContent='No particles within the window.';return;}
- const rms=squared.map(sum=>count>1?fmt(Math.sqrt(sum/count),5)+' mm':'—');
- output.textContent=count.toLocaleString()+' particles · Centroid x: '+fmt(mean[0],5)+' mm · Centroid y: '+fmt(mean[1],5)+' mm · RMS x: '+rms[0]+' · RMS y: '+rms[1];
+ const rms=squared.map(sum=>count>1?Math.sqrt(Math.max(0,sum/count)):null);
+ const formatRms=value=>value===null?'—':value<1?fmt(value*1000,3)+' µm':fmt(value,4)+' mm';
+ $('bunchRmsX').textContent=formatRms(rms[0]);
+ $('bunchRmsY').textContent=formatRms(rms[1]);
+ $('bunchMeanX').textContent=fmt(mean[0],5)+' mm';
+ $('bunchMeanY').textContent=fmt(mean[1],5)+' mm';
+ $('bunchCount').textContent=count.toLocaleString();
+ output.textContent=count===1?'At least two particles are needed to estimate RMS.':'';
 }
-for(const id of ['bunchAxis','bunchLower','bunchUpper'])$(id).oninput=drawBunchStats;
+for(const id of ['bunchAxis','bunchLower','bunchUpper'])$(id).oninput=()=>draw();
+$('bunchPanel').ontoggle=()=>draw();
 function draw(){if(!result)return;drawBunchStats();drawEnvelope();const p=result.particles,r=imageRange(p),match=$('profileRange').value==='image',rx=match?r:ScreenDiagnostics.extent(p,0),ry=match?r:ScreenDiagnostics.extent(p,2);const img=density('image',p,0,2,r,r),hx=profile('profileX',p,0,rx,'x [mm]','#1671c5'),hy=profile('profileY',p,2,ry,'y [mm]','#d06d36');const st=result.stats;$('sx').textContent=st.sx===null?'—':fmt(st.sx*1e3,4)+' mm';$('sy').textContent=st.sy===null?'—':fmt(st.sy*1e3,4)+' mm';$('count').textContent=st.n.toLocaleString();$('transmission').textContent=fmt(100*st.n/beam.n,2)+'%';$('imageNote').textContent=st.n?`${img.included.toLocaleString()} particles within image bounds; RMS sizes and transmission use all ${st.n.toLocaleString()} particles at the screen. Image bins: ${$('imageBins').value||256} × ${$('imageBins').value||256} (${fmt(img.dx,4)} mm/bin). Profiles: x ${hx.n} bins (${fmt(hx.dx,4)} mm/bin), y ${hy.n} bins (${fmt(hy.dx,4)} mm/bin). ${match?'Profiles match image range.':'Profiles use independent auto ranges.'} Centroid: x = ${fmt(st.mx*1e3)} mm, y = ${fmt(st.my*1e3)} mm.`:'No particles reach this screen. Open or reposition the upstream slit.';drawInitial();}
 $('applyElement').onclick=()=>{const old=line.find(e=>e.id===selected);if(!old)return;const e={...old};$('elementFields').querySelectorAll('input,select').forEach(input=>{const key=input.id.slice(3);e[key]=['name','axis'].includes(key)?input.value:Number(input.value);});const candidate=line.map(x=>x.id===e.id?e:x);try{P.validate(candidate,screen,extension);line=candidate;renderList();run();}catch(err){status(err.message,true);}};
 $('add').onclick=()=>{const type=$('newType').value,id=Math.max(0,...line.map(e=>e.id))+1,s=line.length?Math.max(...line.map(e=>e.s+e.L))+.4:1;const e={id,type,name:symbols[type]+id,s:Number(s.toFixed(6)),L:type==='slit'?0:type==='drift'?.5:.2};if(type==='quad')e.G=1;if(type==='dipole')Object.assign(e,{angle:10,edgeIn:0,edgeOut:0});if(type==='tdc')Object.assign(e,{axis:'x',kappa:2,frequency:1.3,phase:0});if(type==='slit')Object.assign(e,{axis:'x',width:1,center:0});line.push(e);selected=id;renderList();run();};
